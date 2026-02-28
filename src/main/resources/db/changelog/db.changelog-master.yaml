@@ -1,3 +1,5 @@
 databaseChangeLog:
   - include:
       file: db/changelog/scripts/create_classes_table.sql
+  - include:
+      file: db/changelog/scripts/create_materials_table.sql
