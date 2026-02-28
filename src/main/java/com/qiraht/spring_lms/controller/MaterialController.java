@@ -21,7 +21,7 @@ public class MaterialController {
     public ResponseEntity<ApiResponse<?>> postMaterial(@PathVariable String classId, @RequestBody MaterialRequestDTO request){
         materialService.addMaterial(request,classId);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(200,"success", null));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(201,"success", null));
     }
 
     @GetMapping("/class/{classId}")

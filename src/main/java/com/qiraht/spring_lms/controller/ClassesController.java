@@ -36,7 +36,7 @@ public class ClassesController {
     public ResponseEntity<ApiResponse<ClassResponseDTO>> getClassById(@PathVariable("id") String id) {
         ClassResponseDTO data = classesService.getClassById(id);
 
-        return ResponseEntity.ok(ApiResponse.success(200,"success", data));
+        return ResponseEntity.ok(ApiResponse.success(201,"success", data));
     }
 
     @PutMapping("/{id}")
