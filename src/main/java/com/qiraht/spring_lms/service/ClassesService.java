@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -28,6 +27,7 @@ public class ClassesService {
         String classId = NanoIdUtils.randomNanoId(10);
 
         Classes _class = Classes.builder()
+                .id(classId)
                 .name(request.getName())
                 .description(request.getDescription())
                 .build();
