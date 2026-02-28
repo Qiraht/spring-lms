@@ -2,6 +2,7 @@ package com.qiraht.spring_lms.controller;
 
 import com.qiraht.spring_lms.dto.ApiResponse;
 import com.qiraht.spring_lms.dto.ClassRequestDTO;
+import com.qiraht.spring_lms.dto.ClassResponseDTO;
 import com.qiraht.spring_lms.entity.Classes;
 import com.qiraht.spring_lms.service.ClassesService;
 import lombok.RequiredArgsConstructor;
@@ -25,16 +26,30 @@ public class ClassesController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Classes>>> getAllClasses() {
-        List<Classes> classes = classesService.getAllClasses();
+    public ResponseEntity<ApiResponse<List<ClassResponseDTO>>> getAllClasses() {
+        List<ClassResponseDTO> data = classesService.getAllClasses();
 
-        return ResponseEntity.ok(ApiResponse.success(200, "success", classes));
+        return ResponseEntity.ok(ApiResponse.success(200, "success", data));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Classes>> getClassById(@PathVariable("id") String id) {
-        Classes classes = classesService.getClassById(id);
+    public ResponseEntity<ApiResponse<ClassResponseDTO>> getClassById(@PathVariable("id") String id) {
+        ClassResponseDTO data = classesService.getClassById(id);
 
-        return ResponseEntity.ok(ApiResponse.success(200,"success", classes));
+        return ResponseEntity.ok(ApiResponse.success(200,"success", data));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<Classes>> putClass(@PathVariable("id") String id, @RequestBody ClassRequestDTO request) {
+        classesService.updateClass(id, request);
+
+        return ResponseEntity.ok(ApiResponse.success(200,"success", null));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteClass(@PathVariable("id") String id) {
+        classesService.deleteClass(id);
+
+        return ResponseEntity.ok(ApiResponse.success(200,"success", null));
     }
 }
