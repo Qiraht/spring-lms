@@ -7,6 +7,7 @@ import com.qiraht.spring_lms.service.MaterialService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/material")
 @RequiredArgsConstructor
+@Validated
 public class MaterialController {
     private final MaterialService materialService;
 
@@ -28,6 +30,7 @@ public class MaterialController {
     public ResponseEntity<ApiResponse<List<MaterialResponseDTO>>> getMaterials(@PathVariable String classId){
         List<MaterialResponseDTO> data = materialService.getAllMaterialsFromClass(classId);
 
+        // TODO: Include class detail
         return ResponseEntity.ok(ApiResponse.success(200,"success", data));
     }
 
