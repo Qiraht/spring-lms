@@ -16,10 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping
 @RequiredArgsConstructor
 @Validated
-public class AuthController {
+public class UserController {
     private final UserService userService;
 
     @PostMapping("/register")
