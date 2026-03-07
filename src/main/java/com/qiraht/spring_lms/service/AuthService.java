@@ -1,7 +1,7 @@
 package com.qiraht.spring_lms.service;
 
-import com.qiraht.spring_lms.dto.LoginRequestDTO;
-import com.qiraht.spring_lms.dto.LoginResponseDTO;
+import com.qiraht.spring_lms.dto.request.LoginRequestDTO;
+import com.qiraht.spring_lms.dto.response.LoginResponseDTO;
 import com.qiraht.spring_lms.entity.User;
 import com.qiraht.spring_lms.exception.NotFoundException;
 import com.qiraht.spring_lms.repository.UserRepository;

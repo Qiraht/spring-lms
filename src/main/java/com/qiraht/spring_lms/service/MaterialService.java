@@ -1,7 +1,7 @@
 package com.qiraht.spring_lms.service;
 
-import com.qiraht.spring_lms.dto.MaterialRequestDTO;
-import com.qiraht.spring_lms.dto.MaterialResponseDTO;
+import com.qiraht.spring_lms.dto.request.MaterialRequestDTO;
+import com.qiraht.spring_lms.dto.response.MaterialResponseDTO;
 import com.qiraht.spring_lms.entity.Material;
 import com.qiraht.spring_lms.repository.ClassesRepository;
 import com.qiraht.spring_lms.repository.MaterialRepository;

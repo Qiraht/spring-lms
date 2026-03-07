@@ -1,8 +1,8 @@
 package com.qiraht.spring_lms.controller;
 
 import com.qiraht.spring_lms.dto.ApiResponse;
-import com.qiraht.spring_lms.dto.ClassRequestDTO;
-import com.qiraht.spring_lms.dto.ClassResponseDTO;
+import com.qiraht.spring_lms.dto.request.ClassRequestDTO;
+import com.qiraht.spring_lms.dto.response.ClassResponseDTO;
 import com.qiraht.spring_lms.entity.Classes;
 import com.qiraht.spring_lms.service.ClassesService;
 import lombok.RequiredArgsConstructor;

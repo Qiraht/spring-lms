@@ -1,6 +1,5 @@
-package com.qiraht.spring_lms.dto;
+package com.qiraht.spring_lms.dto.response;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,10 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MaterialRequestDTO {
-    @NotBlank
+public class MaterialResponseDTO {
+    String id;
     String title;
-    @NotBlank
     String content;
     String attachment;
 }
