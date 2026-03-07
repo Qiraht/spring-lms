@@ -21,9 +21,9 @@ public class UserService {
         // Check duplicate Email
         userRepository.findByEmail(request.getEmail()).ifPresent(user -> {throw new RuntimeException("Email already in use");});
 
+        // Password hashing
         String hashedPassword = passwordEncoder.encode(request.getPassword());
 
-        // TODO: find a better solution for role validation
         User user = User.builder()
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
