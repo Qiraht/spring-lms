@@ -1,7 +1,9 @@
 databaseChangeLog:
-  - include:
+  - include: ## Classes Table
       file: db/changelog/scripts/create_classes_table.sql
-  - include:
+  - include: ## Materials Table
       file: db/changelog/scripts/create_materials_table.sql
-  - include:
+  - include: ## Users Table
       file: db/changelog/scripts/create_users_table.sql
+  - include: ## Assignments Table
+      file: db/changelog/scripts/create_assignments_table.sql
