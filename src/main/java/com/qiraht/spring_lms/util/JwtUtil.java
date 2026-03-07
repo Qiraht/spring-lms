@@ -51,7 +51,7 @@ public class JwtUtil {
                 .getPayload();
     }
 
-    private String generateToken(User user) {
+    public String generateToken(User user) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", user.getRole().name()); // role for Bypass
         claims.put("userId", user.getId().toString()); // id for resource authorization
