@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface AssignmentRepository extends JpaRepository<Assignment, String> {
-    List<Assignment> findByClassId(String classId);
+    List<Assignment> findByClassesId(String classesId);
 }

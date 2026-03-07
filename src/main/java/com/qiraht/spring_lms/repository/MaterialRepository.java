@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface MaterialRepository extends JpaRepository<Material, String> {
-    List<Material> findByClassId(String classId);
+    List<Material> findByClassesId(String classesId);
 }
