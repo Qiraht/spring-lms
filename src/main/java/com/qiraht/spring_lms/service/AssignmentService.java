@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -71,7 +72,26 @@ public class AssignmentService {
         return response;
     }
 
-    public void editAssignment(String assignmentId, AssignmentRequestDTO request) {}
+    public String editAssignment(String assignmentId, AssignmentRequestDTO request) {
+        Assignment assignment = assignmentRepository.findById(assignmentId).orElseThrow(() -> new NotFoundException("Assignment with id " + assignmentId + " not found"));
 
-    public void deleteAssignment(String assignmentId) {}
+        assignment.setTitle(request.getTitle());
+        assignment.setContent(request.getContent());
+        assignment.setAttachment(request.getAttachment());
+        assignment.setDueDate(request.getDueDate());
+
+        assignmentRepository.save(assignment);
+
+        return assignment.getId();
+    }
+
+    public String deleteAssignment(String assignmentId) {
+        Assignment assignment = assignmentRepository.findById(assignmentId).orElseThrow(() -> new NotFoundException("Assignment with id " + assignmentId + " not found"));
+
+        assignment.setDeletedAt(LocalDateTime.now());
+
+        assignmentRepository.save(assignment);
+
+        return assignment.getId();
+    }
 }
