@@ -5,12 +5,11 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 @Data
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonPropertyOrder("{ status, message, data }")
+@JsonPropertyOrder({ "status", "message", "data" })
 public class ApiResponse<T> {
     private final Integer status;
     private final String message;
