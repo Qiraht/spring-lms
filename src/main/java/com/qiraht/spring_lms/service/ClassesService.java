@@ -3,6 +3,7 @@ package com.qiraht.spring_lms.service;
 import com.qiraht.spring_lms.dto.request.ClassRequestDTO;
 import com.qiraht.spring_lms.dto.response.ClassResponseDTO;
 import com.qiraht.spring_lms.entity.Classes;
+import com.qiraht.spring_lms.exception.NotFoundException;
 import com.qiraht.spring_lms.repository.ClassesRepository;
 import com.soundicly.jnanoidenhanced.jnanoid.NanoIdUtils;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +49,7 @@ public class ClassesService {
     }
 
     public ClassResponseDTO getClassById(String id) {
-        Classes _class = classesRepository.findById(id).orElseThrow(() -> new RuntimeException("Class with id " + id + " not found"));
+        Classes _class = classesRepository.findById(id).orElseThrow(() -> new NotFoundException("Class with id " + id + " not found"));
 
         ClassResponseDTO responseDTO = new ClassResponseDTO();
         BeanUtils.copyProperties(_class, responseDTO);
@@ -57,7 +58,7 @@ public class ClassesService {
 
     public void updateClass(String id,ClassRequestDTO request) {
         log.info("Putting class: {}", request.getName());
-        Classes classes = classesRepository.findById(id).orElseThrow(() -> new RuntimeException("Class with id " + id + " not found"));
+        Classes classes = classesRepository.findById(id).orElseThrow(() -> new NotFoundException("Class with id " + id + " not found"));
 
         classes.setName(request.getName());
         classes.setDescription(request.getDescription());
@@ -67,7 +68,7 @@ public class ClassesService {
 
     public void deleteClass(String id) {
         log.info("Deleting class: {}", id);
-        Classes classes = classesRepository.findById(id).orElseThrow(() -> new RuntimeException("Class not found"));
+        Classes classes = classesRepository.findById(id).orElseThrow(() -> new NotFoundException("Class with id " + id + " not found"));
 
         classes.setDeletedAt(LocalDateTime.now());
     }
