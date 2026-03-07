@@ -4,6 +4,7 @@ import com.qiraht.spring_lms.dto.ApiResponse;
 import com.qiraht.spring_lms.dto.request.MaterialRequestDTO;
 import com.qiraht.spring_lms.dto.response.MaterialResponseDTO;
 import com.qiraht.spring_lms.service.MaterialService;
+import com.qiraht.spring_lms.service.ProgressService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import java.util.List;
 @Validated
 public class MaterialController {
     private final MaterialService materialService;
+    private final ProgressService progressService;
 
     @PostMapping("/class/{classId}")
     @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isTeacherOfClass(authentication.principal.userId, #classId)")
@@ -42,6 +44,7 @@ public class MaterialController {
     @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isEnrolledInClass(authentication.principal.userId, @materialRepository.findById(#materialId).get().classes.id)")
     public ResponseEntity<ApiResponse<MaterialResponseDTO>> getMaterial(@PathVariable String materialId) {
         MaterialResponseDTO data = materialService.getMaterialById(materialId);
+        progressService.markMaterialAsCompleted(materialId);
 
         return ResponseEntity.ok(ApiResponse.success(200, "success", data));
     }
