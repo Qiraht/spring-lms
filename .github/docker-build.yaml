@@ -30,7 +30,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main')
     env:
-      IMAGE_NAME: simple-inventory-spring
+      IMAGE_NAME: spring-lms-api
       DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
     steps:
       # Checkout repo
