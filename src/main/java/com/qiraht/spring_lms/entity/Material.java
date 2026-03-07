@@ -1,9 +1,6 @@
 package com.qiraht.spring_lms.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -28,8 +25,13 @@ public class Material {
     @Column(nullable = false)
     private String attachment;
 
-    @Column(name = "class_id")
-    private String classId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "class_id")
+    private Classes classes;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
