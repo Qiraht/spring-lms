@@ -1,3 +1,25 @@
 spring:
   application:
     name: spring-lms
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:lmsdb}?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
+    username: ${DB_USER:root}
+    password: ${DB_USER:supersecretpassword}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate.ddl-auto: none
+    show-sql: true
+    properties:
+      hibernate:
+        format-sql: true
+
+## Liquibase
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+    default-schema: lmsdb
+
+## JWT Secret key & Expiration
+jwt:
+  secret: ${JWT_SECRET:v6yB8p98p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p}
+  expiration: ${JWT_EXPIRATION:86400000}
