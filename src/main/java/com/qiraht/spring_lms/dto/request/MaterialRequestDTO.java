@@ -11,7 +11,9 @@ import lombok.NoArgsConstructor;
 public class MaterialRequestDTO {
     @NotBlank
     String title;
+
     @NotBlank
     String content;
+
     String attachment;
 }
