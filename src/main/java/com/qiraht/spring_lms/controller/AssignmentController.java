@@ -37,4 +37,18 @@ public class AssignmentController {
 
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(HttpStatus.OK.value(), "success", data));
     }
+
+    @PutMapping("/{assignmentId}")
+    public ResponseEntity<ApiResponse<String>> putAssignment(@PathVariable String assignmentId, @RequestBody AssignmentRequestDTO request) {
+        String data = assignmentService.editAssignment(assignmentId, request);
+
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(HttpStatus.OK.value(), "success", data));
+    }
+
+    @DeleteMapping("/{assignmentId}")
+    public ResponseEntity<ApiResponse<String>> deleteAssignment(@PathVariable String assignmentId) {
+        String data = assignmentService.deleteAssignment(assignmentId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(HttpStatus.OK.value(), "success", data));
+    }
 }
