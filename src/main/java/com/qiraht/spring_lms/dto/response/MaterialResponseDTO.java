@@ -8,8 +8,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class MaterialResponseDTO {
-    String id;
-    String title;
-    String content;
-    String attachment;
+    private String id;
+    private String title;
+    private String content;
+    private String attachment;
+    private AuthorDTO author;
 }
