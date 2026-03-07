@@ -7,3 +7,13 @@ databaseChangeLog:
       file: db/changelog/scripts/create_users_table.sql
   - include: ## Assignments Table
       file: db/changelog/scripts/create_assignments_table.sql
+  - include: ## Enrollments Table
+      file: db/changelog/scripts/create_class_enrollments_table.sql
+  - include: ## Alter Assignments Table
+      file: db/changelog/scripts/add_column_user_id_on_assignments_table.sql
+  - include: ## Alter Materials Table
+      file: db/changelog/scripts/add_column_user_id_on_materials_table.sql
+  - include: ## Assignment Submissions Table
+      file: db/changelog/scripts/create_assignment_submissions_table.sql
+  - include: ## Student Progress Table
+      file: db/changelog/scripts/create_student_progress_table.sql
