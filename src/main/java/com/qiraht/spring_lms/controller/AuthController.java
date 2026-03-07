@@ -1,8 +1,8 @@
 package com.qiraht.spring_lms.controller;
 
 import com.qiraht.spring_lms.dto.ApiResponse;
-import com.qiraht.spring_lms.dto.LoginRequestDTO;
-import com.qiraht.spring_lms.dto.LoginResponseDTO;
+import com.qiraht.spring_lms.dto.request.LoginRequestDTO;
+import com.qiraht.spring_lms.dto.response.LoginResponseDTO;
 import com.qiraht.spring_lms.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

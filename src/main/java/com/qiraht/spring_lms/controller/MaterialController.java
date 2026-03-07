@@ -1,8 +1,8 @@
 package com.qiraht.spring_lms.controller;
 
 import com.qiraht.spring_lms.dto.ApiResponse;
-import com.qiraht.spring_lms.dto.MaterialRequestDTO;
-import com.qiraht.spring_lms.dto.MaterialResponseDTO;
+import com.qiraht.spring_lms.dto.request.MaterialRequestDTO;
+import com.qiraht.spring_lms.dto.response.MaterialResponseDTO;
 import com.qiraht.spring_lms.service.MaterialService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;

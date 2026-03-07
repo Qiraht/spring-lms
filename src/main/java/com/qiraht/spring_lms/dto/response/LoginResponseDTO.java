@@ -1,4 +1,4 @@
-package com.qiraht.spring_lms.dto;
+package com.qiraht.spring_lms.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

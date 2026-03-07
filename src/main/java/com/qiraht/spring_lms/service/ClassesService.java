@@ -1,7 +1,7 @@
 package com.qiraht.spring_lms.service;
 
-import com.qiraht.spring_lms.dto.ClassRequestDTO;
-import com.qiraht.spring_lms.dto.ClassResponseDTO;
+import com.qiraht.spring_lms.dto.request.ClassRequestDTO;
+import com.qiraht.spring_lms.dto.response.ClassResponseDTO;
 import com.qiraht.spring_lms.entity.Classes;
 import com.qiraht.spring_lms.repository.ClassesRepository;
 import com.soundicly.jnanoidenhanced.jnanoid.NanoIdUtils;

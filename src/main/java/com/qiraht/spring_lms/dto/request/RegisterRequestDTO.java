@@ -1,4 +1,4 @@
-package com.qiraht.spring_lms.dto;
+package com.qiraht.spring_lms.dto.request;
 
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;

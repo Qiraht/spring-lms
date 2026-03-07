@@ -1,6 +1,6 @@
 package com.qiraht.spring_lms.service;
 
-import com.qiraht.spring_lms.dto.RegisterRequestDTO;
+import com.qiraht.spring_lms.dto.request.RegisterRequestDTO;
 import com.qiraht.spring_lms.entity.User;
 import com.qiraht.spring_lms.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
