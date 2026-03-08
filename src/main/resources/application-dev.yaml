@@ -8,7 +8,7 @@ spring:
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:lmsdb}?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC
     username: ${DB_USER:root}
-    password: ${DB_USER:supersecretpassword}
+    password: ${DB_PASSWORD:supersecretpassword}
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate.ddl-auto: none
