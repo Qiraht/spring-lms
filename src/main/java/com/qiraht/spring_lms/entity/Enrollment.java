@@ -4,6 +4,7 @@ import com.qiraht.spring_lms.Enum.ClassRole;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "class_enrollments")
+@SQLRestriction("deleted_at IS NULL")
 public class Enrollment {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
