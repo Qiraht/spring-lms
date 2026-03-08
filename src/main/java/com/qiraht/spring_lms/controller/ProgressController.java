@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @RestController
 @RequestMapping("/api/class/{classId}")
 @RequiredArgsConstructor
@@ -21,10 +24,10 @@ public class ProgressController {
 
     @GetMapping("/summary")
     @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isTeacherOfClass(authentication.principal.userId, #classId)")
-    public ResponseEntity<ApiResponse<List<StudentClassSummaryDTO>>> getAllStudentSummaries(
-            @PathVariable String classId) {
+    public ResponseEntity<ApiResponse<Page<StudentClassSummaryDTO>>> getAllStudentSummaries(
+            @PathVariable String classId, Pageable pageable) {
 
-        List<StudentClassSummaryDTO> data = progressService.getAllStudentSummariesForClass(classId);
+        Page<StudentClassSummaryDTO> data = progressService.getAllStudentSummariesForClass(classId, pageable);
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), "success", data));
     }
 
