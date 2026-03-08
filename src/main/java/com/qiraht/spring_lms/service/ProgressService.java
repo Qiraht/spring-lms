@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -76,12 +79,12 @@ public class ProgressService {
                 }
 
                 // Aggregate Metrics
-                Integer totalMaterials = materialRepository.findByClassesId(classId).size();
+                Integer totalMaterials = (int) materialRepository.countByClassesId(classId);
                 Integer completedMaterials = (int) progressRepository.countCompletedMaterialsByUserIdAndClassId(
                                 studentId,
                                 classId);
 
-                Integer totalAssignments = assignmentRepository.findByClassesId(classId).size();
+                Integer totalAssignments = (int) assignmentRepository.countByClassesId(classId);
                 Integer submittedAssignments = (int) submissionRepository.countByUserIdAndClassId(studentId, classId);
 
                 Double averageScoreDouble = submissionRepository.getAverageScoreByUserIdAndClassId(studentId, classId);
@@ -113,25 +116,14 @@ public class ProgressService {
                                 .build();
         }
 
-        public List<StudentClassSummaryDTO> getAllStudentSummariesForClass(String classId) {
+        public Page<StudentClassSummaryDTO> getAllStudentSummariesForClass(String classId, Pageable pageable) {
                 classesRepository.findById(classId)
                                 .orElseThrow(() -> new NotFoundException("Class not found"));
 
-                // Get all enrolled students
-                // To do this, we need a method in EnrollmentRepository to find users by class
-                // and role.
-                // We will fetch all enrollments and filter for now if repository method isn't
-                // built.
-                List<com.qiraht.spring_lms.entity.Enrollment> enrollments = enrollmentRepository.findAll().stream()
-                                .filter(e -> e.getClasses().getId().equals(classId)
-                                                && e.getRole().equals(com.qiraht.spring_lms.Enum.ClassRole.STUDENT))
-                                .toList();
+                Page<com.qiraht.spring_lms.entity.Enrollment> enrollments = enrollmentRepository
+                                .findByClassesIdAndRole(classId, com.qiraht.spring_lms.Enum.ClassRole.STUDENT,
+                                                pageable);
 
-                List<StudentClassSummaryDTO> summaries = new ArrayList<>();
-                for (com.qiraht.spring_lms.entity.Enrollment enrollment : enrollments) {
-                        summaries.add(getStudentClassSummary(classId, enrollment.getUser().getId()));
-                }
-
-                return summaries;
+                return enrollments.map(enrollment -> getStudentClassSummary(classId, enrollment.getUser().getId()));
         }
 }
