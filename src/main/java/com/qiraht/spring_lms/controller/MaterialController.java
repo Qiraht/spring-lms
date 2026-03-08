@@ -8,6 +8,8 @@ import com.qiraht.spring_lms.service.ProgressService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -33,8 +35,9 @@ public class MaterialController {
 
     @GetMapping("/class/{classId}")
     @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isEnrolledInClass(authentication.principal.userId, #classId)")
-    public ResponseEntity<ApiResponse<List<MaterialResponseDTO>>> getMaterials(@PathVariable String classId) {
-        List<MaterialResponseDTO> data = materialService.getAllMaterialsFromClass(classId);
+    public ResponseEntity<ApiResponse<Page<MaterialResponseDTO>>> getMaterials(@PathVariable String classId,
+            Pageable pageable) {
+        Page<MaterialResponseDTO> data = materialService.getAllMaterialsFromClass(classId, pageable);
 
         // TODO: Include class detail
         return ResponseEntity.ok(ApiResponse.success(200, "success", data));
