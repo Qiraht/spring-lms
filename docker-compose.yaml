@@ -1,0 +1,21 @@
+services:
+  spring-lms-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: qiraht/spring-lms-api:latest
+    container_name: spring-lms-api
+    ports:
+      - "${APP_PORT:-8080}:${APP_PORT:-8080}"
+    env_file:
+      - .env
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - APP_PORT=${APP_PORT:-8080}
+      ## Mysql
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+    restart: always
