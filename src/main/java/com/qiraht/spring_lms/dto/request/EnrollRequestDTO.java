@@ -1,19 +1,20 @@
 package com.qiraht.spring_lms.dto.request;
 
+import com.qiraht.spring_lms.Enum.ClassRole;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class MaterialRequestDTO {
+public class EnrollRequestDTO {
     @NotBlank
-    String title;
+    private UUID userId;
 
     @NotBlank
-    String content;
-
-    String attachment;
+    private ClassRole role;
 }

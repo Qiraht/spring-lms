@@ -28,8 +28,13 @@ public class Assignment {
     @Column(name = "due_date")
     private LocalDateTime dueDate;
 
-    @Column(name = "class_id")
-    private String classId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "class_id")
+    private Classes classes;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

@@ -1,37 +1,37 @@
 package com.qiraht.spring_lms.entity;
 
+import com.qiraht.spring_lms.Enum.ClassRole;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Getter
 @Setter
 @Builder
-@AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "materials")
-public class Material {
+@AllArgsConstructor
+@Table(name = "class_enrollments")
+public class Enrollment {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    private String title;
-
-    private String content;
-
-    @Column(nullable = false)
-    private String attachment;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "class_id")
+    private Classes classes;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "class_id")
-    private Classes classes;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ClassRole role;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

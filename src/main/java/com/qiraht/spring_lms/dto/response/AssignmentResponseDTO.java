@@ -15,4 +15,5 @@ public class AssignmentResponseDTO {
     private String content;
     private String attachment;
     private LocalDateTime dueDate;
+    private AuthorDTO author;
 }
