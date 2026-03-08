@@ -12,7 +12,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/class")
@@ -32,8 +33,8 @@ public class ClassesController {
 
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','USER')") // Any Authenticated
-    public ResponseEntity<ApiResponse<List<ClassResponseDTO>>> getAllClasses() {
-        List<ClassResponseDTO> data = classesService.getAllClasses();
+    public ResponseEntity<ApiResponse<Page<ClassResponseDTO>>> getAllClasses(Pageable pageable) {
+        Page<ClassResponseDTO> data = classesService.getAllClasses(pageable);
 
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(HttpStatus.OK.value(), "success", data));
     }

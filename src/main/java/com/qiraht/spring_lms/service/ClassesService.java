@@ -12,8 +12,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Slf4j
 @Service
@@ -36,29 +37,27 @@ public class ClassesService {
         classesRepository.save(_class);
     }
 
-    public List<ClassResponseDTO> getAllClasses() {
-        List<ClassResponseDTO> response = new ArrayList<>();
-
-        for (Classes _class : classesRepository.findAll()) {
+    public Page<ClassResponseDTO> getAllClasses(Pageable pageable) {
+        return classesRepository.findAll(pageable).map(classes -> {
             ClassResponseDTO responseDTO = new ClassResponseDTO();
-            BeanUtils.copyProperties(_class, responseDTO);
-            response.add(responseDTO);
-        }
-
-        return response;
+            BeanUtils.copyProperties(classes, responseDTO);
+            return responseDTO;
+        });
     }
 
     public ClassResponseDTO getClassById(String id) {
-        Classes _class = classesRepository.findById(id).orElseThrow(() -> new NotFoundException("Class with id " + id + " not found"));
+        Classes _class = classesRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Class with id " + id + " not found"));
 
         ClassResponseDTO responseDTO = new ClassResponseDTO();
         BeanUtils.copyProperties(_class, responseDTO);
         return responseDTO;
     }
 
-    public void updateClass(String id,ClassRequestDTO request) {
+    public void updateClass(String id, ClassRequestDTO request) {
         log.info("Putting class: {}", request.getName());
-        Classes classes = classesRepository.findById(id).orElseThrow(() -> new NotFoundException("Class with id " + id + " not found"));
+        Classes classes = classesRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Class with id " + id + " not found"));
 
         classes.setName(request.getName());
         classes.setDescription(request.getDescription());
@@ -68,10 +67,10 @@ public class ClassesService {
 
     public void deleteClass(String id) {
         log.info("Deleting class: {}", id);
-        Classes classes = classesRepository.findById(id).orElseThrow(() -> new NotFoundException("Class with id " + id + " not found"));
+        Classes classes = classesRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Class with id " + id + " not found"));
 
         classes.setDeletedAt(LocalDateTime.now());
     }
-
 
 }
