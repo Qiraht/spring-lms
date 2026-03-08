@@ -5,12 +5,15 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
+
 import java.util.Optional;
 import java.util.UUID;
 
 public interface AssignmentSubmissionRepository extends JpaRepository<AssignmentSubmission, UUID> {
-    List<AssignmentSubmission> findByAssignmentId(String assignmentId);
+    Page<AssignmentSubmission> findByAssignmentId(String assignmentId, Pageable pageable);
 
     Optional<AssignmentSubmission> findByAssignmentIdAndUserId(String assignmentId, UUID userId);
 
