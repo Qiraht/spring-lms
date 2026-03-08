@@ -71,6 +71,7 @@ public class ClassesService {
                 .orElseThrow(() -> new NotFoundException("Class with id " + id + " not found"));
 
         classes.setDeletedAt(LocalDateTime.now());
+        classesRepository.save(classes);
     }
 
 }
