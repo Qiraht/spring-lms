@@ -11,7 +11,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/assignment")
@@ -40,15 +41,15 @@ public class AssignmentController {
 
     @GetMapping("/class/{classId}")
     @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isEnrolledInClass(authentication.principal.userId, #classId)")
-    public ResponseEntity<ApiResponse<List<AssignmentResponseDTO>>> getAssignmentByClassId(
-            @PathVariable String classId) {
-        List<AssignmentResponseDTO> data = assignmentService.getAssignmentsByClass(classId);
+    public ResponseEntity<ApiResponse<Page<AssignmentResponseDTO>>> getAssignmentByClassId(
+            @PathVariable String classId, Pageable pageable) {
+        Page<AssignmentResponseDTO> data = assignmentService.getAssignmentsByClass(classId, pageable);
 
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(HttpStatus.OK.value(), "success", data));
     }
 
     @PutMapping("/{assignmentId}")
-    @PreAuthorize("hasRole('ADMIN') or @authService.isTeacherOfAssignment(authentication.principal.userId, #assignmentId)")
+    @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isTeacherOfAssignment(authentication.principal.userId, #assignmentId)")
     public ResponseEntity<ApiResponse<String>> putAssignment(@PathVariable String assignmentId,
             @RequestBody AssignmentRequestDTO request) {
         String data = assignmentService.editAssignment(assignmentId, request);
