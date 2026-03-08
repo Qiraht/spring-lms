@@ -11,7 +11,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/assignment/{assignmentId}/submission")
@@ -33,9 +34,9 @@ public class SubmissionController {
 
     @GetMapping
     @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isTeacherOfAssignment(authentication.principal.userId, #assignmentId)")
-    public ResponseEntity<ApiResponse<List<SubmissionResponseDTO>>> getAllSubmissions(
-            @PathVariable String assignmentId) {
-        List<SubmissionResponseDTO> data = submissionService.getAllSubmissions(assignmentId);
+    public ResponseEntity<ApiResponse<Page<SubmissionResponseDTO>>> getAllSubmissions(
+            @PathVariable String assignmentId, Pageable pageable) {
+        Page<SubmissionResponseDTO> data = submissionService.getAllSubmissions(assignmentId, pageable);
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), "success", data));
     }
 

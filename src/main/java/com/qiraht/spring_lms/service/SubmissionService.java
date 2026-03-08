@@ -19,10 +19,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Slf4j
 @Service
@@ -63,12 +65,12 @@ public class SubmissionService {
         return mapToDTO(submission);
     }
 
-    public List<SubmissionResponseDTO> getAllSubmissions(String assignmentId) {
+    public Page<SubmissionResponseDTO> getAllSubmissions(String assignmentId, Pageable pageable) {
         assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new NotFoundException("Assignment not found"));
 
-        List<AssignmentSubmission> submissions = submissionRepository.findByAssignmentId(assignmentId);
-        return submissions.stream().map(this::mapToDTO).collect(Collectors.toList());
+        Page<AssignmentSubmission> submissions = submissionRepository.findByAssignmentId(assignmentId, pageable);
+        return submissions.map(this::mapToDTO);
     }
 
     public SubmissionResponseDTO getSubmissionById(String submissionId) {
