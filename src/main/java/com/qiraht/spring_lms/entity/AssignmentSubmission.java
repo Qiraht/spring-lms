@@ -3,6 +3,7 @@ package com.qiraht.spring_lms.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "assignment_submissions")
+@SQLRestriction("deleted_at IS NULL")
 public class AssignmentSubmission {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
