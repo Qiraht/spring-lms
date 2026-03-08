@@ -80,6 +80,7 @@ public class EnrollmentService {
         Enrollment enrollment = enrollmentRepository.findByClassesIdAndUserId(classId, userId)
                 .orElseThrow(() -> new NotFoundException("User is not enrolled in this class"));
 
-        enrollmentRepository.delete(enrollment);
+        enrollment.setDeletedAt(java.time.LocalDateTime.now());
+        enrollmentRepository.save(enrollment);
     }
 }
