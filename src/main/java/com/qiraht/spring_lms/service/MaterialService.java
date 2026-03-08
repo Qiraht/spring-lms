@@ -17,8 +17,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Slf4j
 @Service
@@ -71,27 +72,24 @@ public class MaterialService {
         return response;
     }
 
-    public List<MaterialResponseDTO> getAllMaterialsFromClass(String classId) {
+    public Page<MaterialResponseDTO> getAllMaterialsFromClass(String classId, Pageable pageable) {
         // Check class first
         classesRepository.findById(classId).orElseThrow(() -> new RuntimeException("Class not found"));
 
-        List<Material> materials = materialRepository.findByClassesId(classId);
-        List<MaterialResponseDTO> response = new ArrayList<>();
+        Page<Material> materials = materialRepository.findByClassesId(classId, pageable);
 
-        for (Material material : materials) {
+        return materials.map(material -> {
             MaterialResponseDTO responseDTO = new MaterialResponseDTO();
             BeanUtils.copyProperties(material, responseDTO);
             if (material.getUser() != null) {
-                responseDTO.setAuthor(com.qiraht.spring_lms.dto.response.AuthorDTO.builder()
+                responseDTO.setAuthor(AuthorDTO.builder()
                         .id(material.getUser().getId())
                         .firstName(material.getUser().getFirstName())
                         .lastName(material.getUser().getLastName())
                         .build());
             }
-            response.add(responseDTO);
-        }
-
-        return response;
+            return responseDTO;
+        });
     }
 
     public void editMaterial(MaterialRequestDTO request, String materialId) {
