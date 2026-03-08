@@ -19,8 +19,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Slf4j
 @Service
@@ -77,29 +78,25 @@ public class AssignmentService {
         return response;
     }
 
-    public List<AssignmentResponseDTO> getAssignmentsByClass(String classId) {
+    public Page<AssignmentResponseDTO> getAssignmentsByClass(String classId, Pageable pageable) {
         // Check class
         classesRepository.findById(classId)
                 .orElseThrow(() -> new NotFoundException("Class with id " + classId + " not found"));
 
-        List<Assignment> assignments = assignmentRepository.findByClassesId(classId);
+        Page<Assignment> assignments = assignmentRepository.findByClassesId(classId, pageable);
 
-        List<AssignmentResponseDTO> response = new ArrayList<>();
-
-        for (Assignment assignment : assignments) {
+        return assignments.map(assignment -> {
             AssignmentResponseDTO responseDTO = new AssignmentResponseDTO();
             BeanUtils.copyProperties(assignment, responseDTO);
             if (assignment.getUser() != null) {
-                responseDTO.setAuthor(com.qiraht.spring_lms.dto.response.AuthorDTO.builder()
+                responseDTO.setAuthor(AuthorDTO.builder()
                         .id(assignment.getUser().getId())
                         .firstName(assignment.getUser().getFirstName())
                         .lastName(assignment.getUser().getLastName())
                         .build());
             }
-            response.add(responseDTO);
-        }
-
-        return response;
+            return responseDTO;
+        });
     }
 
     public String editAssignment(String assignmentId, AssignmentRequestDTO request) {
