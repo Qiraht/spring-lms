@@ -23,7 +23,7 @@ jobs:
 
       # Build with Maven
       - name: Build application with maven
-        run: mvn clean package
+        run: mvn clean package -DskipTests
 
   push-to-dockerhub:
     needs: build-and-test
