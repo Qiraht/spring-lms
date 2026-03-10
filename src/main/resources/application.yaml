@@ -4,13 +4,10 @@ spring:
   profiles:
     active: dev
 
-## Liquibase
-  liquibase:
-    enabled: true
-    change-log: classpath:/db/changelog/db.changelog-master.yaml
-    default-schema: lmsdb
-
 ## JWT Secret key & Expiration
 jwt:
   secret: ${JWT_SECRET:v6yB8p98p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p}
   expiration: ${JWT_EXPIRATION:86400000}
+
+server:
+  forward-headers-strategy: FRAMEWORK
