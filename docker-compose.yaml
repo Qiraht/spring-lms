@@ -6,12 +6,12 @@ services:
     image: qiraht/spring-lms-api:latest
     container_name: spring-lms-api
     ports:
-      - "${APP_PORT:-8080}:${APP_PORT:-8080}"
+      - "${PORT:-8080}:8080"
     env_file:
       - .env
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - APP_PORT=${APP_PORT:-8080}
+      - PORT=${PORT:-8080}
       ## Mysql
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
