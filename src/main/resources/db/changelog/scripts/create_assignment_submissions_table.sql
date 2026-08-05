@@ -2,8 +2,8 @@
 --changeset author:Thariq Aulia Akbar
 
 CREATE TABLE IF NOT EXISTS assignment_submissions (
-    id BINARY(16) NOT NULL PRIMARY KEY,
-    assignment_id VARCHAR(50) NOT NULL,
+    id BINARY(16) NOT NULL PRIMARY KEY DEFAULT (UUID_TO_BIN(UUID())),
+    assignment_id BINARY(16) NOT NULL,
     user_id BINARY(16) NOT NULL,
     attachment TEXT NOT NULL,
     score DECIMAL(5, 2) NOT NULL DEFAULT 0,

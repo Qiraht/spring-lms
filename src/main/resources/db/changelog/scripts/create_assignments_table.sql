@@ -2,12 +2,12 @@
 --changeset author:Thariq Aulia Akbar
 
 CREATE TABLE IF NOT EXISTS assignments(
-    id VARCHAR(50) PRIMARY KEY,
+    id BINARY(16) NOT NULL PRIMARY KEY DEFAULT (UUID_TO_BIN(UUID())),
     title TEXT NOT NULL,
     content TEXT NOT NULL,
     attachment TEXT NULL,
     due_date TIMESTAMP(3) NOT NULL,
-    class_id VARCHAR(50) ,
+    class_id BINARY(16) ,
     created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     updated_at TIMESTAMP(3) NOT NULL,
     deleted_at TIMESTAMP(3) NULL,

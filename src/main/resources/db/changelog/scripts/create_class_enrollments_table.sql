@@ -2,10 +2,10 @@
 --changeset author:Thariq Aulia Akbar
 
 CREATE TABLE IF NOT EXISTS class_enrollments (
-    id BINARY(16) NOT NULL PRIMARY KEY,
-    class_id VARCHAR(50) NOT NULL,
+    id BINARY(16) NOT NULL PRIMARY KEY DEFAULT (UUID_TO_BIN(UUID())),
+    class_id BINARY(16) NOT NULL,
     user_id BINARY(16) NOT NULL,
-    role ENUM('TEACHER', 'STUDENT') NOT NULL,
+    role VARCHAR(50) NOT NULL,
     created_at TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     updated_at TIMESTAMP(3) NOT NULL,
     deleted_at TIMESTAMP(3) NULL,
