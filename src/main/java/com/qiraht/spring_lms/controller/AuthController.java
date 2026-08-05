@@ -4,6 +4,8 @@ import com.qiraht.spring_lms.dto.ApiResponse;
 import com.qiraht.spring_lms.dto.request.LoginRequestDTO;
 import com.qiraht.spring_lms.dto.response.LoginResponseDTO;
 import com.qiraht.spring_lms.service.AuthService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +22,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final AuthService authService;
 
+    @Tag(name = "Auth")
+    @Operation(summary = "Post Auth User", description = "Authenticate user and return JWT token. Public API")
     @PostMapping
     public ResponseEntity<ApiResponse<Object>> postLogin(@RequestBody LoginRequestDTO request) {
         LoginResponseDTO data = authService.LoginUser(request);

@@ -4,6 +4,7 @@ import com.qiraht.spring_lms.dto.ApiResponse;
 import com.qiraht.spring_lms.dto.response.StudentClassSummaryDTO;
 import com.qiraht.spring_lms.service.ProgressService;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,7 +26,7 @@ public class ProgressController {
     @GetMapping("/summary")
     @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isTeacherOfClass(authentication.principal.userId, #classId)")
     public ResponseEntity<ApiResponse<Page<StudentClassSummaryDTO>>> getAllStudentSummaries(
-            @PathVariable String classId, Pageable pageable) {
+            @PathVariable String classId, @ParameterObject Pageable pageable) {
 
         Page<StudentClassSummaryDTO> data = progressService.getAllStudentSummariesForClass(classId, pageable);
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), "success", data));

@@ -3,6 +3,8 @@ package com.qiraht.spring_lms.controller;
 import com.qiraht.spring_lms.dto.ApiResponse;
 import com.qiraht.spring_lms.dto.request.EnrollRequestDTO;
 import com.qiraht.spring_lms.service.EnrollmentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +23,8 @@ public class EnrollmentController {
 
     private final EnrollmentService enrollmentService;
 
+    @Tag(name = "Enrollment")
+    @Operation(summary = "Enroll User", description = "Enroll User to Class. Authentication Needed and role 'Admin' needed")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> enrollUsers(
@@ -33,6 +37,8 @@ public class EnrollmentController {
                 .body(ApiResponse.success(HttpStatus.CREATED.value(), "Users enrolled successfully", null));
     }
 
+    @Tag(name = "Enrollment")
+    @Operation(summary = "Delete User Enrollment", description = "Delete User Enrollment. Authentication Needed and role 'Admin' needed")
     @DeleteMapping("/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> removeUser(
