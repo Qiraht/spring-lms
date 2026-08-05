@@ -36,7 +36,7 @@ public class SubmissionService {
     private final UserRepository userRepository;
 
     public SubmissionResponseDTO submitAssignment(String assignmentId, SubmissionRequestDTO request) {
-        Assignment assignment = assignmentRepository.findById(assignmentId)
+        Assignment assignment = assignmentRepository.findById(UUID.fromString(assignmentId))
                 .orElseThrow(() -> new NotFoundException("Assignment not found"));
 
         CustomUsersDetails userDetails = (CustomUsersDetails) SecurityContextHolder.getContext().getAuthentication()
@@ -46,7 +46,7 @@ public class SubmissionService {
 
         // Check if previously submitted to update or create new
         Optional<AssignmentSubmission> existingSubmission = submissionRepository
-                .findByAssignmentIdAndUserId(assignmentId, user.getId());
+                .findByAssignmentIdAndUserId(UUID.fromString(assignmentId), user.getId());
 
         AssignmentSubmission submission;
         if (existingSubmission.isPresent()) {
@@ -66,10 +66,10 @@ public class SubmissionService {
     }
 
     public Page<SubmissionResponseDTO> getAllSubmissions(String assignmentId, Pageable pageable) {
-        assignmentRepository.findById(assignmentId)
+        assignmentRepository.findById(UUID.fromString(assignmentId))
                 .orElseThrow(() -> new NotFoundException("Assignment not found"));
 
-        Page<AssignmentSubmission> submissions = submissionRepository.findByAssignmentId(assignmentId, pageable);
+        Page<AssignmentSubmission> submissions = submissionRepository.findByAssignmentId(UUID.fromString(assignmentId), pageable);
         return submissions.map(this::mapToDTO);
     }
 
@@ -93,7 +93,7 @@ public class SubmissionService {
         SubmissionResponseDTO dto = new SubmissionResponseDTO();
         BeanUtils.copyProperties(submission, dto);
         dto.setId(submission.getId().toString());
-        dto.setAssignmentId(submission.getAssignment().getId());
+        dto.setAssignmentId(submission.getAssignment().getId().toString());
         dto.setSubmittedAt(submission.getCreatedAt());
 
         if (submission.getUser() != null) {

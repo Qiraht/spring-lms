@@ -13,13 +13,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface AssignmentSubmissionRepository extends JpaRepository<AssignmentSubmission, UUID> {
-    Page<AssignmentSubmission> findByAssignmentId(String assignmentId, Pageable pageable);
+    Page<AssignmentSubmission> findByAssignmentId(UUID assignmentId, Pageable pageable);
 
-    Optional<AssignmentSubmission> findByAssignmentIdAndUserId(String assignmentId, UUID userId);
+    Optional<AssignmentSubmission> findByAssignmentIdAndUserId(UUID assignmentId, UUID userId);
 
     @Query("SELECT COUNT(s) FROM AssignmentSubmission s WHERE s.user.id = :userId AND s.assignment.classes.id = :classId")
-    long countByUserIdAndClassId(@Param("userId") UUID userId, @Param("classId") String classId);
+    long countByUserIdAndClassId(@Param("userId") UUID userId, @Param("classId") UUID classId);
 
     @Query("SELECT AVG(s.score) FROM AssignmentSubmission s WHERE s.user.id = :userId AND s.assignment.classes.id = :classId")
-    Double getAverageScoreByUserIdAndClassId(@Param("userId") UUID userId, @Param("classId") String classId);
+    Double getAverageScoreByUserIdAndClassId(@Param("userId") UUID userId, @Param("classId") UUID classId);
 }

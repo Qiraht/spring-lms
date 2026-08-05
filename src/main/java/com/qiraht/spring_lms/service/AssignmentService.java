@@ -11,7 +11,6 @@ import com.qiraht.spring_lms.repository.AssignmentRepository;
 import com.qiraht.spring_lms.repository.ClassesRepository;
 import com.qiraht.spring_lms.repository.UserRepository;
 import com.qiraht.spring_lms.security.CustomUsersDetails;
-import com.soundicly.jnanoidenhanced.jnanoid.NanoIdUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -19,6 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -33,7 +33,7 @@ public class AssignmentService {
 
     public String addAssignment(String classId, AssignmentRequestDTO request) {
         // Check class
-        Classes classes = classesRepository.findById(classId)
+        Classes classes = classesRepository.findById(UUID.fromString(classId))
                 .orElseThrow(() -> new NotFoundException("Class with id " + classId + " not found"));
 
         CustomUsersDetails userDetails = (CustomUsersDetails) SecurityContextHolder
@@ -43,11 +43,7 @@ public class AssignmentService {
 
         log.info("Adding assignment for class: {}", classId);
 
-        // ID generation with NanoId
-        String id = NanoIdUtils.randomNanoId(10);
-
         Assignment assignment = Assignment.builder()
-                .id(id)
                 .title(request.getTitle())
                 .content(request.getContent())
                 .classes(classes)
@@ -57,16 +53,17 @@ public class AssignmentService {
 
         assignmentRepository.save(assignment);
 
-        return id;
+        return assignment.getId().toString();
     }
 
     public AssignmentResponseDTO getAssignmentById(String assignmentId) {
-        Assignment assignment = assignmentRepository.findById(assignmentId)
+        Assignment assignment = assignmentRepository.findById(UUID.fromString(assignmentId))
                 .orElseThrow(() -> new NotFoundException("Assignment with id " + assignmentId + " not found"));
 
         AssignmentResponseDTO response = new AssignmentResponseDTO();
 
         BeanUtils.copyProperties(assignment, response);
+        response.setId(assignment.getId().toString());
         if (assignment.getUser() != null) {
             response.setAuthor(AuthorDTO.builder()
                     .id(assignment.getUser().getId())
@@ -80,14 +77,15 @@ public class AssignmentService {
 
     public Page<AssignmentResponseDTO> getAssignmentsByClass(String classId, Pageable pageable) {
         // Check class
-        classesRepository.findById(classId)
+        classesRepository.findById(UUID.fromString(classId))
                 .orElseThrow(() -> new NotFoundException("Class with id " + classId + " not found"));
 
-        Page<Assignment> assignments = assignmentRepository.findByClassesId(classId, pageable);
+        Page<Assignment> assignments = assignmentRepository.findByClassesId(UUID.fromString(classId), pageable);
 
         return assignments.map(assignment -> {
             AssignmentResponseDTO responseDTO = new AssignmentResponseDTO();
             BeanUtils.copyProperties(assignment, responseDTO);
+            responseDTO.setId(assignment.getId().toString());
             if (assignment.getUser() != null) {
                 responseDTO.setAuthor(AuthorDTO.builder()
                         .id(assignment.getUser().getId())
@@ -100,7 +98,7 @@ public class AssignmentService {
     }
 
     public String editAssignment(String assignmentId, AssignmentRequestDTO request) {
-        Assignment assignment = assignmentRepository.findById(assignmentId)
+        Assignment assignment = assignmentRepository.findById(UUID.fromString(assignmentId))
                 .orElseThrow(() -> new NotFoundException("Assignment with id " + assignmentId + " not found"));
 
         assignment.setTitle(request.getTitle());
@@ -110,17 +108,17 @@ public class AssignmentService {
 
         assignmentRepository.save(assignment);
 
-        return assignment.getId();
+        return assignment.getId().toString();
     }
 
     public String deleteAssignment(String assignmentId) {
-        Assignment assignment = assignmentRepository.findById(assignmentId)
+        Assignment assignment = assignmentRepository.findById(UUID.fromString(assignmentId))
                 .orElseThrow(() -> new NotFoundException("Assignment with id " + assignmentId + " not found"));
 
         assignment.setDeletedAt(LocalDateTime.now());
 
         assignmentRepository.save(assignment);
 
-        return assignment.getId();
+        return assignment.getId().toString();
     }
 }

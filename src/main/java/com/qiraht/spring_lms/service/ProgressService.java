@@ -37,7 +37,7 @@ public class ProgressService {
         private final ClassesRepository classesRepository;
 
         public void markMaterialAsCompleted(String materialId) {
-                Material material = materialRepository.findById(materialId)
+                Material material = materialRepository.findById(UUID.fromString(materialId))
                                 .orElseThrow(() -> new NotFoundException("Material not found"));
 
                 CustomUsersDetails userDetails = (CustomUsersDetails) SecurityContextHolder.getContext()
@@ -53,7 +53,7 @@ public class ProgressService {
                 }
 
                 Optional<StudentProgress> existingProgress = progressRepository.findByUserIdAndMaterialId(user.getId(),
-                                materialId);
+                                UUID.fromString(materialId));
 
                 if (existingProgress.isEmpty()) {
                         StudentProgress progress = StudentProgress.builder()
@@ -66,28 +66,30 @@ public class ProgressService {
         }
 
         public StudentClassSummaryDTO getStudentClassSummary(String classId, UUID studentId) {
-                classesRepository.findById(classId)
+                UUID classUuid = UUID.fromString(classId);
+
+                classesRepository.findById(classUuid)
                                 .orElseThrow(() -> new NotFoundException("Class not found"));
 
                 User student = userRepository.findById(studentId)
                                 .orElseThrow(() -> new NotFoundException("Student not found"));
 
                 // Check enrollment
-                if (!enrollmentRepository.existsByClassesIdAndUserIdAndRole(classId, studentId,
+                if (!enrollmentRepository.existsByClassesIdAndUserIdAndRole(classUuid, studentId,
                                 com.qiraht.spring_lms.Enum.ClassRole.STUDENT)) {
                         throw new RuntimeException("User is not enrolled as a student in this class");
                 }
 
                 // Aggregate Metrics
-                Integer totalMaterials = (int) materialRepository.countByClassesId(classId);
+                Integer totalMaterials = (int) materialRepository.countByClassesId(classUuid);
                 Integer completedMaterials = (int) progressRepository.countCompletedMaterialsByUserIdAndClassId(
                                 studentId,
-                                classId);
+                                classUuid);
 
-                Integer totalAssignments = (int) assignmentRepository.countByClassesId(classId);
-                Integer submittedAssignments = (int) submissionRepository.countByUserIdAndClassId(studentId, classId);
+                Integer totalAssignments = (int) assignmentRepository.countByClassesId(classUuid);
+                Integer submittedAssignments = (int) submissionRepository.countByUserIdAndClassId(studentId, classUuid);
 
-                Double averageScoreDouble = submissionRepository.getAverageScoreByUserIdAndClassId(studentId, classId);
+                Double averageScoreDouble = submissionRepository.getAverageScoreByUserIdAndClassId(studentId, classUuid);
                 BigDecimal averageScore = averageScoreDouble != null
                                 ? BigDecimal.valueOf(averageScoreDouble).setScale(2, RoundingMode.HALF_UP)
                                 : BigDecimal.ZERO;
@@ -117,11 +119,13 @@ public class ProgressService {
         }
 
         public Page<StudentClassSummaryDTO> getAllStudentSummariesForClass(String classId, Pageable pageable) {
-                classesRepository.findById(classId)
+                UUID classUuid = UUID.fromString(classId);
+
+                classesRepository.findById(classUuid)
                                 .orElseThrow(() -> new NotFoundException("Class not found"));
 
                 Page<com.qiraht.spring_lms.entity.Enrollment> enrollments = enrollmentRepository
-                                .findByClassesIdAndRole(classId, com.qiraht.spring_lms.Enum.ClassRole.STUDENT,
+                                .findByClassesIdAndRole(classUuid, com.qiraht.spring_lms.Enum.ClassRole.STUDENT,
                                                 pageable);
 
                 return enrollments.map(enrollment -> getStudentClassSummary(classId, enrollment.getUser().getId()));

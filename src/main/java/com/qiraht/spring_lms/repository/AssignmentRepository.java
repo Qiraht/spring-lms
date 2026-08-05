@@ -7,9 +7,11 @@ import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-@Repository
-public interface AssignmentRepository extends JpaRepository<Assignment, String> {
-    Page<Assignment> findByClassesId(String classesId, Pageable pageable);
+import java.util.UUID;
 
-    long countByClassesId(String classesId);
+@Repository
+public interface AssignmentRepository extends JpaRepository<Assignment, UUID> {
+    Page<Assignment> findByClassesId(UUID classesId, Pageable pageable);
+
+    long countByClassesId(UUID classesId);
 }

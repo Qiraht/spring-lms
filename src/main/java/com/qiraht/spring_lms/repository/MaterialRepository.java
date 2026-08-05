@@ -7,9 +7,11 @@ import org.springframework.stereotype.Repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-@Repository
-public interface MaterialRepository extends JpaRepository<Material, String> {
-    Page<Material> findByClassesId(String classesId, Pageable pageable);
+import java.util.UUID;
 
-    long countByClassesId(String classesId);
+@Repository
+public interface MaterialRepository extends JpaRepository<Material, UUID> {
+    Page<Material> findByClassesId(UUID classesId, Pageable pageable);
+
+    long countByClassesId(UUID classesId);
 }
