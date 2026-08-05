@@ -3,12 +3,11 @@ package com.qiraht.spring_lms.service;
 import com.qiraht.spring_lms.dto.request.RegisterRequestDTO;
 import com.qiraht.spring_lms.entity.User;
 import com.qiraht.spring_lms.repository.UserRepository;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.UUID;
 
 @Slf4j
 @Service
@@ -19,7 +18,9 @@ public class UserService {
 
     public UUID RegisterUser(RegisterRequestDTO request) {
         // Check duplicate Email
-        userRepository.findByEmail(request.getEmail()).ifPresent(user -> {throw new RuntimeException("Email already in use");});
+        userRepository.findByEmail(request.getEmail()).ifPresent(user -> {
+            throw new RuntimeException("Email already in use");
+        });
 
         // Password hashing
         String hashedPassword = passwordEncoder.encode(request.getPassword());

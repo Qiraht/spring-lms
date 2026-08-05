@@ -8,14 +8,13 @@ import com.qiraht.spring_lms.service.ClassesService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/class")
@@ -25,7 +24,9 @@ public class ClassesController {
     private final ClassesService classesService;
 
     @Tag(name = "Class")
-    @Operation(summary = "Create Class", description = "Create new Class. Authentication Needed and role 'Admin' needed ")
+    @Operation(
+            summary = "Create Class",
+            description = "Create new Class. Authentication Needed and role 'Admin' needed ")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')") // Admin only can create class
     public ResponseEntity<ApiResponse<Void>> postClass(@RequestBody ClassRequestDTO request) {
@@ -56,18 +57,23 @@ public class ClassesController {
     }
 
     @Tag(name = "Class")
-    @Operation(summary = "Put Class", description = "Edit Class details. Authentication Needed and Resource Authorization role 'TEACHER' (User role 'ADMIN' can bypass this)")
+    @Operation(
+            summary = "Put Class",
+            description =
+                    "Edit Class details. Authentication Needed and Resource Authorization role 'TEACHER' (User role 'ADMIN' can bypass this)")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isTeacherOfClass(authentication.principal.userId, #id)")
-    public ResponseEntity<ApiResponse<Classes>> putClass(@PathVariable("id") String id,
-            @RequestBody ClassRequestDTO request) {
+    public ResponseEntity<ApiResponse<Classes>> putClass(
+            @PathVariable("id") String id, @RequestBody ClassRequestDTO request) {
         classesService.updateClass(id, request);
 
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(HttpStatus.OK.value(), "success", null));
     }
 
     @Tag(name = "Class")
-    @Operation(summary = "Delete Class", description = "Delete Class (Soft Delete). Authentication Needed and role 'ADMIN' needed")
+    @Operation(
+            summary = "Delete Class",
+            description = "Delete Class (Soft Delete). Authentication Needed and role 'ADMIN' needed")
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')") // Admin only
     public ResponseEntity<ApiResponse<Void>> deleteClass(@PathVariable("id") String id) {

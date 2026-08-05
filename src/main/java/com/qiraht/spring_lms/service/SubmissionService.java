@@ -12,19 +12,16 @@ import com.qiraht.spring_lms.repository.AssignmentRepository;
 import com.qiraht.spring_lms.repository.AssignmentSubmissionRepository;
 import com.qiraht.spring_lms.repository.UserRepository;
 import com.qiraht.spring_lms.security.CustomUsersDetails;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -36,17 +33,19 @@ public class SubmissionService {
     private final UserRepository userRepository;
 
     public SubmissionResponseDTO submitAssignment(String assignmentId, SubmissionRequestDTO request) {
-        Assignment assignment = assignmentRepository.findById(UUID.fromString(assignmentId))
+        Assignment assignment = assignmentRepository
+                .findById(UUID.fromString(assignmentId))
                 .orElseThrow(() -> new NotFoundException("Assignment not found"));
 
-        CustomUsersDetails userDetails = (CustomUsersDetails) SecurityContextHolder.getContext().getAuthentication()
-                .getPrincipal();
-        User user = userRepository.findById(userDetails.getUserId())
+        CustomUsersDetails userDetails = (CustomUsersDetails)
+                SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository
+                .findById(userDetails.getUserId())
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
         // Check if previously submitted to update or create new
-        Optional<AssignmentSubmission> existingSubmission = submissionRepository
-                .findByAssignmentIdAndUserId(UUID.fromString(assignmentId), user.getId());
+        Optional<AssignmentSubmission> existingSubmission =
+                submissionRepository.findByAssignmentIdAndUserId(UUID.fromString(assignmentId), user.getId());
 
         AssignmentSubmission submission;
         if (existingSubmission.isPresent()) {
@@ -66,21 +65,25 @@ public class SubmissionService {
     }
 
     public Page<SubmissionResponseDTO> getAllSubmissions(String assignmentId, Pageable pageable) {
-        assignmentRepository.findById(UUID.fromString(assignmentId))
+        assignmentRepository
+                .findById(UUID.fromString(assignmentId))
                 .orElseThrow(() -> new NotFoundException("Assignment not found"));
 
-        Page<AssignmentSubmission> submissions = submissionRepository.findByAssignmentId(UUID.fromString(assignmentId), pageable);
+        Page<AssignmentSubmission> submissions =
+                submissionRepository.findByAssignmentId(UUID.fromString(assignmentId), pageable);
         return submissions.map(this::mapToDTO);
     }
 
     public SubmissionResponseDTO getSubmissionById(String submissionId) {
-        AssignmentSubmission submission = submissionRepository.findById(UUID.fromString(submissionId))
+        AssignmentSubmission submission = submissionRepository
+                .findById(UUID.fromString(submissionId))
                 .orElseThrow(() -> new NotFoundException("Submission not found"));
         return mapToDTO(submission);
     }
 
     public SubmissionResponseDTO gradeSubmission(String submissionId, GradeRequestDTO request) {
-        AssignmentSubmission submission = submissionRepository.findById(UUID.fromString(submissionId))
+        AssignmentSubmission submission = submissionRepository
+                .findById(UUID.fromString(submissionId))
                 .orElseThrow(() -> new NotFoundException("Submission not found"));
 
         submission.setScore(request.getScore());

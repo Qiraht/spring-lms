@@ -9,17 +9,15 @@ import com.qiraht.spring_lms.entity.User;
 import com.qiraht.spring_lms.repository.ClassesRepository;
 import com.qiraht.spring_lms.repository.MaterialRepository;
 import com.qiraht.spring_lms.security.CustomUsersDetails;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -31,16 +29,17 @@ public class MaterialService {
 
     public void addMaterial(MaterialRequestDTO request, String classId) {
         // Check class first
-        Classes classes = classesRepository.findById(UUID.fromString(classId))
+        Classes classes = classesRepository
+                .findById(UUID.fromString(classId))
                 .orElseThrow(() -> new RuntimeException("Class not found"));
 
-        CustomUsersDetails userDetails = (CustomUsersDetails) SecurityContextHolder
-                .getContext().getAuthentication().getPrincipal();
-        User user = userRepository.findById(userDetails.getUserId())
+        CustomUsersDetails userDetails = (CustomUsersDetails)
+                SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository
+                .findById(userDetails.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Material material = Material
-                .builder()
+        Material material = Material.builder()
                 .title(request.getTitle())
                 .content(request.getContent())
                 .attachment(request.getAttachment())
@@ -52,7 +51,8 @@ public class MaterialService {
     }
 
     public MaterialResponseDTO getMaterialById(String materialId) {
-        Material material = materialRepository.findById(UUID.fromString(materialId))
+        Material material = materialRepository
+                .findById(UUID.fromString(materialId))
                 .orElseThrow(() -> new RuntimeException("Material not found"));
 
         MaterialResponseDTO response = new MaterialResponseDTO();
@@ -92,7 +92,8 @@ public class MaterialService {
     }
 
     public void editMaterial(MaterialRequestDTO request, String materialId) {
-        Material material = materialRepository.findById(UUID.fromString(materialId))
+        Material material = materialRepository
+                .findById(UUID.fromString(materialId))
                 .orElseThrow(() -> new RuntimeException("Material not found"));
 
         material.setTitle(request.getTitle());
@@ -103,7 +104,8 @@ public class MaterialService {
     }
 
     public void deleteMaterial(String materialId) {
-        Material material = materialRepository.findById(UUID.fromString(materialId))
+        Material material = materialRepository
+                .findById(UUID.fromString(materialId))
                 .orElseThrow(() -> new RuntimeException("Material not found"));
 
         material.setDeletedAt(LocalDateTime.now());

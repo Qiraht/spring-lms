@@ -8,126 +8,119 @@ import com.qiraht.spring_lms.entity.User;
 import com.qiraht.spring_lms.exception.NotFoundException;
 import com.qiraht.spring_lms.repository.*;
 import com.qiraht.spring_lms.security.CustomUsersDetails;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Service;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ProgressService {
 
-        private final StudentProgressRepository progressRepository;
-        private final AssignmentSubmissionRepository submissionRepository;
-        private final MaterialRepository materialRepository;
-        private final AssignmentRepository assignmentRepository;
-        private final EnrollmentRepository enrollmentRepository;
-        private final UserRepository userRepository;
-        private final ClassesRepository classesRepository;
+    private final StudentProgressRepository progressRepository;
+    private final AssignmentSubmissionRepository submissionRepository;
+    private final MaterialRepository materialRepository;
+    private final AssignmentRepository assignmentRepository;
+    private final EnrollmentRepository enrollmentRepository;
+    private final UserRepository userRepository;
+    private final ClassesRepository classesRepository;
 
-        public void markMaterialAsCompleted(String materialId) {
-                Material material = materialRepository.findById(UUID.fromString(materialId))
-                                .orElseThrow(() -> new NotFoundException("Material not found"));
+    public void markMaterialAsCompleted(String materialId) {
+        Material material = materialRepository
+                .findById(UUID.fromString(materialId))
+                .orElseThrow(() -> new NotFoundException("Material not found"));
 
-                CustomUsersDetails userDetails = (CustomUsersDetails) SecurityContextHolder.getContext()
-                                .getAuthentication()
-                                .getPrincipal();
-                User user = userRepository.findById(userDetails.getUserId())
-                                .orElseThrow(() -> new NotFoundException("User not found"));
+        CustomUsersDetails userDetails = (CustomUsersDetails)
+                SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User user = userRepository
+                .findById(userDetails.getUserId())
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
-                // Only track progress for enrolled students
-                if (!enrollmentRepository.existsByClassesIdAndUserIdAndRole(material.getClasses().getId(), user.getId(),
-                                com.qiraht.spring_lms.Enum.ClassRole.STUDENT)) {
-                        return;
-                }
-
-                Optional<StudentProgress> existingProgress = progressRepository.findByUserIdAndMaterialId(user.getId(),
-                                UUID.fromString(materialId));
-
-                if (existingProgress.isEmpty()) {
-                        StudentProgress progress = StudentProgress.builder()
-                                        .user(user)
-                                        .material(material)
-                                        .isCompleted(true)
-                                        .build();
-                        progressRepository.save(progress);
-                }
+        // Only track progress for enrolled students
+        if (!enrollmentRepository.existsByClassesIdAndUserIdAndRole(
+                material.getClasses().getId(), user.getId(), com.qiraht.spring_lms.Enum.ClassRole.STUDENT)) {
+            return;
         }
 
-        public StudentClassSummaryDTO getStudentClassSummary(String classId, UUID studentId) {
-                UUID classUuid = UUID.fromString(classId);
+        Optional<StudentProgress> existingProgress =
+                progressRepository.findByUserIdAndMaterialId(user.getId(), UUID.fromString(materialId));
 
-                classesRepository.findById(classUuid)
-                                .orElseThrow(() -> new NotFoundException("Class not found"));
+        if (existingProgress.isEmpty()) {
+            StudentProgress progress = StudentProgress.builder()
+                    .user(user)
+                    .material(material)
+                    .isCompleted(true)
+                    .build();
+            progressRepository.save(progress);
+        }
+    }
 
-                User student = userRepository.findById(studentId)
-                                .orElseThrow(() -> new NotFoundException("Student not found"));
+    public StudentClassSummaryDTO getStudentClassSummary(String classId, UUID studentId) {
+        UUID classUuid = UUID.fromString(classId);
 
-                // Check enrollment
-                if (!enrollmentRepository.existsByClassesIdAndUserIdAndRole(classUuid, studentId,
-                                com.qiraht.spring_lms.Enum.ClassRole.STUDENT)) {
-                        throw new RuntimeException("User is not enrolled as a student in this class");
-                }
+        classesRepository.findById(classUuid).orElseThrow(() -> new NotFoundException("Class not found"));
 
-                // Aggregate Metrics
-                Integer totalMaterials = (int) materialRepository.countByClassesId(classUuid);
-                Integer completedMaterials = (int) progressRepository.countCompletedMaterialsByUserIdAndClassId(
-                                studentId,
-                                classUuid);
+        User student = userRepository.findById(studentId).orElseThrow(() -> new NotFoundException("Student not found"));
 
-                Integer totalAssignments = (int) assignmentRepository.countByClassesId(classUuid);
-                Integer submittedAssignments = (int) submissionRepository.countByUserIdAndClassId(studentId, classUuid);
-
-                Double averageScoreDouble = submissionRepository.getAverageScoreByUserIdAndClassId(studentId, classUuid);
-                BigDecimal averageScore = averageScoreDouble != null
-                                ? BigDecimal.valueOf(averageScoreDouble).setScale(2, RoundingMode.HALF_UP)
-                                : BigDecimal.ZERO;
-
-                int totalTrackableItems = totalMaterials + totalAssignments;
-                int totalCompletedItems = completedMaterials + submittedAssignments;
-
-                Double completionPercentage = 0.0;
-                if (totalTrackableItems > 0) {
-                        completionPercentage = ((double) totalCompletedItems / totalTrackableItems) * 100.0;
-                }
-
-                return StudentClassSummaryDTO.builder()
-                                .classId(classId)
-                                .student(AuthorDTO.builder()
-                                                .id(student.getId())
-                                                .firstName(student.getFirstName())
-                                                .lastName(student.getLastName())
-                                                .build())
-                                .totalMaterials(totalMaterials)
-                                .completedMaterials(completedMaterials)
-                                .totalAssignments(totalAssignments)
-                                .submittedAssignments(submittedAssignments)
-                                .averageScore(averageScore)
-                                .completionPercentage(completionPercentage)
-                                .build();
+        // Check enrollment
+        if (!enrollmentRepository.existsByClassesIdAndUserIdAndRole(
+                classUuid, studentId, com.qiraht.spring_lms.Enum.ClassRole.STUDENT)) {
+            throw new RuntimeException("User is not enrolled as a student in this class");
         }
 
-        public Page<StudentClassSummaryDTO> getAllStudentSummariesForClass(String classId, Pageable pageable) {
-                UUID classUuid = UUID.fromString(classId);
+        // Aggregate Metrics
+        Integer totalMaterials = (int) materialRepository.countByClassesId(classUuid);
+        Integer completedMaterials =
+                (int) progressRepository.countCompletedMaterialsByUserIdAndClassId(studentId, classUuid);
 
-                classesRepository.findById(classUuid)
-                                .orElseThrow(() -> new NotFoundException("Class not found"));
+        Integer totalAssignments = (int) assignmentRepository.countByClassesId(classUuid);
+        Integer submittedAssignments = (int) submissionRepository.countByUserIdAndClassId(studentId, classUuid);
 
-                Page<com.qiraht.spring_lms.entity.Enrollment> enrollments = enrollmentRepository
-                                .findByClassesIdAndRole(classUuid, com.qiraht.spring_lms.Enum.ClassRole.STUDENT,
-                                                pageable);
+        Double averageScoreDouble = submissionRepository.getAverageScoreByUserIdAndClassId(studentId, classUuid);
+        BigDecimal averageScore = averageScoreDouble != null
+                ? BigDecimal.valueOf(averageScoreDouble).setScale(2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
 
-                return enrollments.map(enrollment -> getStudentClassSummary(classId, enrollment.getUser().getId()));
+        int totalTrackableItems = totalMaterials + totalAssignments;
+        int totalCompletedItems = completedMaterials + submittedAssignments;
+
+        Double completionPercentage = 0.0;
+        if (totalTrackableItems > 0) {
+            completionPercentage = ((double) totalCompletedItems / totalTrackableItems) * 100.0;
         }
+
+        return StudentClassSummaryDTO.builder()
+                .classId(classId)
+                .student(AuthorDTO.builder()
+                        .id(student.getId())
+                        .firstName(student.getFirstName())
+                        .lastName(student.getLastName())
+                        .build())
+                .totalMaterials(totalMaterials)
+                .completedMaterials(completedMaterials)
+                .totalAssignments(totalAssignments)
+                .submittedAssignments(submittedAssignments)
+                .averageScore(averageScore)
+                .completionPercentage(completionPercentage)
+                .build();
+    }
+
+    public Page<StudentClassSummaryDTO> getAllStudentSummariesForClass(String classId, Pageable pageable) {
+        UUID classUuid = UUID.fromString(classId);
+
+        classesRepository.findById(classUuid).orElseThrow(() -> new NotFoundException("Class not found"));
+
+        Page<com.qiraht.spring_lms.entity.Enrollment> enrollments = enrollmentRepository.findByClassesIdAndRole(
+                classUuid, com.qiraht.spring_lms.Enum.ClassRole.STUDENT, pageable);
+
+        return enrollments.map(enrollment ->
+                getStudentClassSummary(classId, enrollment.getUser().getId()));
+    }
 }

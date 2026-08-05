@@ -1,12 +1,11 @@
 package com.qiraht.spring_lms.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Getter
@@ -14,10 +13,12 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "student_progress", uniqueConstraints = {
-        @UniqueConstraint(columnNames = { "user_id", "material_id" }),
-        @UniqueConstraint(columnNames = { "user_id", "assignment_id" })
-})
+@Table(
+        name = "student_progress",
+        uniqueConstraints = {
+            @UniqueConstraint(columnNames = {"user_id", "material_id"}),
+            @UniqueConstraint(columnNames = {"user_id", "assignment_id"})
+        })
 public class StudentProgress {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

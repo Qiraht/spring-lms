@@ -6,13 +6,12 @@ import com.qiraht.spring_lms.dto.request.SubmissionRequestDTO;
 import com.qiraht.spring_lms.dto.response.SubmissionResponseDTO;
 import com.qiraht.spring_lms.service.SubmissionService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/assignment/{assignmentId}/submission")
@@ -22,10 +21,10 @@ public class SubmissionController {
     private final SubmissionService submissionService;
 
     @PostMapping
-    @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isEnrolledInClass(authentication.principal.userId, @assignmentRepository.findById(#assignmentId).get().classes.id)")
+    @PreAuthorize(
+            "hasRole('ADMIN') or @enrollmentService.isEnrolledInClass(authentication.principal.userId, @assignmentRepository.findById(#assignmentId).get().classes.id)")
     public ResponseEntity<ApiResponse<SubmissionResponseDTO>> submitAssignment(
-            @PathVariable String assignmentId,
-            @RequestBody SubmissionRequestDTO request) {
+            @PathVariable String assignmentId, @RequestBody SubmissionRequestDTO request) {
 
         SubmissionResponseDTO data = submissionService.submitAssignment(assignmentId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -33,7 +32,8 @@ public class SubmissionController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isTeacherOfAssignment(authentication.principal.userId, #assignmentId)")
+    @PreAuthorize(
+            "hasRole('ADMIN') or @enrollmentService.isTeacherOfAssignment(authentication.principal.userId, #assignmentId)")
     public ResponseEntity<ApiResponse<Page<SubmissionResponseDTO>>> getAllSubmissions(
             @PathVariable String assignmentId, Pageable pageable) {
         Page<SubmissionResponseDTO> data = submissionService.getAllSubmissions(assignmentId, pageable);
@@ -41,17 +41,18 @@ public class SubmissionController {
     }
 
     @GetMapping("/{submissionId}")
-    @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isTeacherOfAssignment(authentication.principal.userId, #assignmentId)")
+    @PreAuthorize(
+            "hasRole('ADMIN') or @enrollmentService.isTeacherOfAssignment(authentication.principal.userId, #assignmentId)")
     public ResponseEntity<ApiResponse<SubmissionResponseDTO>> getSubmission(
-            @PathVariable String assignmentId,
-            @PathVariable String submissionId) {
+            @PathVariable String assignmentId, @PathVariable String submissionId) {
 
         SubmissionResponseDTO data = submissionService.getSubmissionById(submissionId);
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), "success", data));
     }
 
     @PutMapping("/{submissionId}")
-    @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isTeacherOfAssignment(authentication.principal.userId, #assignmentId)")
+    @PreAuthorize(
+            "hasRole('ADMIN') or @enrollmentService.isTeacherOfAssignment(authentication.principal.userId, #assignmentId)")
     public ResponseEntity<ApiResponse<SubmissionResponseDTO>> gradeSubmission(
             @PathVariable String assignmentId,
             @PathVariable String submissionId,

@@ -5,14 +5,13 @@ import com.qiraht.spring_lms.dto.request.AssignmentRequestDTO;
 import com.qiraht.spring_lms.dto.response.AssignmentResponseDTO;
 import com.qiraht.spring_lms.service.AssignmentService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/assignment")
@@ -23,16 +22,18 @@ public class AssignmentController {
 
     @PostMapping("/class/{classId}")
     @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isTeacherOfClass(authentication.principal.userId, #classId)")
-    public ResponseEntity<ApiResponse<String>> postAssignment(@PathVariable String classId,
-            @RequestBody AssignmentRequestDTO request) {
+    public ResponseEntity<ApiResponse<String>> postAssignment(
+            @PathVariable String classId, @RequestBody AssignmentRequestDTO request) {
         String data = assignmentService.addAssignment(classId, request);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(HttpStatus.OK.value(),
-                "Assignment on class " + classId + " created successfully", data));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(ApiResponse.success(
+                        HttpStatus.OK.value(), "Assignment on class " + classId + " created successfully", data));
     }
 
     @GetMapping("/{assignmentId}")
-    @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isEnrolledInClass(authentication.principal.userId, @assignmentRepository.findById(#assignmentId).get().classes.id)")
+    @PreAuthorize(
+            "hasRole('ADMIN') or @enrollmentService.isEnrolledInClass(authentication.principal.userId, @assignmentRepository.findById(#assignmentId).get().classes.id)")
     public ResponseEntity<ApiResponse<AssignmentResponseDTO>> getAssignmentById(@PathVariable String assignmentId) {
         AssignmentResponseDTO data = assignmentService.getAssignmentById(assignmentId);
 
@@ -49,9 +50,10 @@ public class AssignmentController {
     }
 
     @PutMapping("/{assignmentId}")
-    @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isTeacherOfAssignment(authentication.principal.userId, #assignmentId)")
-    public ResponseEntity<ApiResponse<String>> putAssignment(@PathVariable String assignmentId,
-            @RequestBody AssignmentRequestDTO request) {
+    @PreAuthorize(
+            "hasRole('ADMIN') or @enrollmentService.isTeacherOfAssignment(authentication.principal.userId, #assignmentId)")
+    public ResponseEntity<ApiResponse<String>> putAssignment(
+            @PathVariable String assignmentId, @RequestBody AssignmentRequestDTO request) {
         String data = assignmentService.editAssignment(assignmentId, request);
 
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(HttpStatus.OK.value(), "success", data));

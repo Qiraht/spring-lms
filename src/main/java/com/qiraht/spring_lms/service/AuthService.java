@@ -22,7 +22,9 @@ public class AuthService {
 
     public LoginResponseDTO LoginUser(LoginRequestDTO request) {
         // Check for email
-        User user = userRepository.findByEmail(request.getEmail()).orElseThrow(() -> new NotFoundException("Email not found"));
+        User user = userRepository
+                .findByEmail(request.getEmail())
+                .orElseThrow(() -> new NotFoundException("Email not found"));
 
         // Check password
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {

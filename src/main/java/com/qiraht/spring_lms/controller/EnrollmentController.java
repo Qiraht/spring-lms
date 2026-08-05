@@ -5,15 +5,14 @@ import com.qiraht.spring_lms.dto.request.EnrollRequestDTO;
 import com.qiraht.spring_lms.service.EnrollmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/class/{classId}/enroll")
@@ -24,12 +23,13 @@ public class EnrollmentController {
     private final EnrollmentService enrollmentService;
 
     @Tag(name = "Enrollment")
-    @Operation(summary = "Enroll User", description = "Enroll User to Class. Authentication Needed and role 'Admin' needed")
+    @Operation(
+            summary = "Enroll User",
+            description = "Enroll User to Class. Authentication Needed and role 'Admin' needed")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> enrollUsers(
-            @PathVariable String classId,
-            @RequestBody List<EnrollRequestDTO> requests) {
+            @PathVariable String classId, @RequestBody List<EnrollRequestDTO> requests) {
 
         enrollmentService.enrollUsers(classId, requests);
 
@@ -38,16 +38,16 @@ public class EnrollmentController {
     }
 
     @Tag(name = "Enrollment")
-    @Operation(summary = "Delete User Enrollment", description = "Delete User Enrollment. Authentication Needed and role 'Admin' needed")
+    @Operation(
+            summary = "Delete User Enrollment",
+            description = "Delete User Enrollment. Authentication Needed and role 'Admin' needed")
     @DeleteMapping("/{userId}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> removeUser(
-            @PathVariable String classId,
-            @PathVariable UUID userId) {
+    public ResponseEntity<ApiResponse<Void>> removeUser(@PathVariable String classId, @PathVariable UUID userId) {
 
         enrollmentService.removeUserFromClass(classId, userId);
 
-        return ResponseEntity
-                .ok(ApiResponse.success(HttpStatus.OK.value(), "User removed from class successfully", null));
+        return ResponseEntity.ok(
+                ApiResponse.success(HttpStatus.OK.value(), "User removed from class successfully", null));
     }
 }

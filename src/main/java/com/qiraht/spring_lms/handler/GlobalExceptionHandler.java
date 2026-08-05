@@ -54,7 +54,8 @@ public class GlobalExceptionHandler {
 
     // Jakarta Validation Error
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<?>> handleBusinessException(MethodArgumentNotValidException ex, HttpServletRequest request) {
+    public ResponseEntity<ApiResponse<?>> handleBusinessException(
+            MethodArgumentNotValidException ex, HttpServletRequest request) {
         log.error("error while processing request", ex);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)

@@ -29,6 +29,10 @@ public class AuthController {
         LoginResponseDTO data = authService.LoginUser(request);
 
         return ResponseEntity.status(HttpStatus.OK)
-                .body(ApiResponse.builder().status(HttpStatus.OK.value()).message("Login success").data(data).build());
+                .body(ApiResponse.builder()
+                        .status(HttpStatus.OK.value())
+                        .message("Login success")
+                        .data(data)
+                        .build());
     }
 }

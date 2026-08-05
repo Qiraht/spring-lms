@@ -5,16 +5,14 @@ import com.qiraht.spring_lms.dto.response.ClassResponseDTO;
 import com.qiraht.spring_lms.entity.Classes;
 import com.qiraht.spring_lms.exception.NotFoundException;
 import com.qiraht.spring_lms.repository.ClassesRepository;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
@@ -43,7 +41,8 @@ public class ClassesService {
     }
 
     public ClassResponseDTO getClassById(String id) {
-        Classes _class = classesRepository.findById(UUID.fromString(id))
+        Classes _class = classesRepository
+                .findById(UUID.fromString(id))
                 .orElseThrow(() -> new NotFoundException("Class with id " + id + " not found"));
 
         ClassResponseDTO responseDTO = new ClassResponseDTO();
@@ -54,7 +53,8 @@ public class ClassesService {
 
     public void updateClass(String id, ClassRequestDTO request) {
         log.info("Putting class: {}", request.getName());
-        Classes classes = classesRepository.findById(UUID.fromString(id))
+        Classes classes = classesRepository
+                .findById(UUID.fromString(id))
                 .orElseThrow(() -> new NotFoundException("Class with id " + id + " not found"));
 
         classes.setName(request.getName());
@@ -65,11 +65,11 @@ public class ClassesService {
 
     public void deleteClass(String id) {
         log.info("Deleting class: {}", id);
-        Classes classes = classesRepository.findById(UUID.fromString(id))
+        Classes classes = classesRepository
+                .findById(UUID.fromString(id))
                 .orElseThrow(() -> new NotFoundException("Class with id " + id + " not found"));
 
         classes.setDeletedAt(LocalDateTime.now());
         classesRepository.save(classes);
     }
-
 }
