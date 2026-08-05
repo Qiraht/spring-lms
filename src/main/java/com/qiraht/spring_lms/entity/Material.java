@@ -3,10 +3,10 @@ package com.qiraht.spring_lms.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Getter
@@ -15,10 +15,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "materials")
-@SQLRestriction("deleted_at IS NULL")
 public class Material {
     @Id
-    private String id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
     private String title;
 
