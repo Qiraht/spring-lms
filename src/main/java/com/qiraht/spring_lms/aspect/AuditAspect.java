@@ -55,7 +55,7 @@ public class AuditAspect {
             } else if ("delete".equals(auditable.action())) {
                 afterState = null;
             }
-            auditService.record(
+            safeRecord(
                     effectiveActor,
                     auditable.entityType(),
                     entityId,
@@ -70,9 +70,23 @@ public class AuditAspect {
                     auditable.action(),
                     auditable.entityType(),
                     actorId);
-            auditService.record(
-                    actorId, auditable.entityType(), entityId, auditable.action(), "failed", beforeState, null);
+            safeRecord(actorId, auditable.entityType(), entityId, auditable.action(), "failed", beforeState, null);
             throw ex;
+        }
+    }
+
+    private void safeRecord(
+            UUID userId,
+            String entityType,
+            UUID entityId,
+            String action,
+            String status,
+            Map<String, Object> beforeState,
+            Map<String, Object> afterState) {
+        try {
+            auditService.record(userId, entityType, entityId, action, status, beforeState, afterState);
+        } catch (Exception e) {
+            log.warn("Failed to record audit action {} on {}: {}", action, entityType, e.getMessage());
         }
     }
 
