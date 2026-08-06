@@ -5,6 +5,7 @@ import com.qiraht.spring_lms.dto.response.StudentClassSummaryDTO;
 import com.qiraht.spring_lms.entity.Material;
 import com.qiraht.spring_lms.entity.StudentProgress;
 import com.qiraht.spring_lms.entity.User;
+import com.qiraht.spring_lms.exception.AuthorizationException;
 import com.qiraht.spring_lms.exception.NotFoundException;
 import com.qiraht.spring_lms.repository.*;
 import com.qiraht.spring_lms.security.CustomUsersDetails;
@@ -31,6 +32,7 @@ public class ProgressService {
     private final EnrollmentRepository enrollmentRepository;
     private final UserRepository userRepository;
     private final ClassesRepository classesRepository;
+    private final AuditService auditService;
 
     public void markMaterialAsCompleted(String materialId) {
         Material material = materialRepository
@@ -59,6 +61,14 @@ public class ProgressService {
                     .isCompleted(true)
                     .build();
             progressRepository.save(progress);
+            auditService.record(
+                    user.getId(),
+                    "progress",
+                    progress.getId(),
+                    "create",
+                    "success",
+                    null,
+                    auditService.snapshot(progress));
         }
     }
 
@@ -72,7 +82,7 @@ public class ProgressService {
         // Check enrollment
         if (!enrollmentRepository.existsByClassesIdAndUserIdAndRole(
                 classUuid, studentId, com.qiraht.spring_lms.Enum.ClassRole.STUDENT)) {
-            throw new RuntimeException("User is not enrolled as a student in this class");
+            throw new AuthorizationException("User is not enrolled as a student in this class");
         }
 
         // Aggregate Metrics

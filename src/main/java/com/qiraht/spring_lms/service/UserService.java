@@ -1,7 +1,9 @@
 package com.qiraht.spring_lms.service;
 
+import com.qiraht.spring_lms.annotation.Auditable;
 import com.qiraht.spring_lms.dto.request.RegisterRequestDTO;
 import com.qiraht.spring_lms.entity.User;
+import com.qiraht.spring_lms.exception.ConflictException;
 import com.qiraht.spring_lms.repository.UserRepository;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -16,10 +18,11 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Auditable(entityType = "user", action = "create", idExpr = "#result")
     public UUID RegisterUser(RegisterRequestDTO request) {
         // Check duplicate Email
         userRepository.findByEmail(request.getEmail()).ifPresent(user -> {
-            throw new RuntimeException("Email already in use");
+            throw new ConflictException("Email already in use");
         });
 
         // Password hashing

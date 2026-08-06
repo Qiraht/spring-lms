@@ -1,11 +1,13 @@
 package com.qiraht.spring_lms.service;
 
+import com.qiraht.spring_lms.annotation.Auditable;
 import com.qiraht.spring_lms.dto.request.MaterialRequestDTO;
 import com.qiraht.spring_lms.dto.response.AuthorDTO;
 import com.qiraht.spring_lms.dto.response.MaterialResponseDTO;
 import com.qiraht.spring_lms.entity.Classes;
 import com.qiraht.spring_lms.entity.Material;
 import com.qiraht.spring_lms.entity.User;
+import com.qiraht.spring_lms.exception.NotFoundException;
 import com.qiraht.spring_lms.repository.ClassesRepository;
 import com.qiraht.spring_lms.repository.MaterialRepository;
 import com.qiraht.spring_lms.security.CustomUsersDetails;
@@ -27,17 +29,18 @@ public class MaterialService {
     private final MaterialRepository materialRepository;
     private final com.qiraht.spring_lms.repository.UserRepository userRepository;
 
-    public void addMaterial(MaterialRequestDTO request, String classId) {
+    @Auditable(entityType = "material", action = "create", idExpr = "#result")
+    public UUID addMaterial(MaterialRequestDTO request, String classId) {
         // Check class first
         Classes classes = classesRepository
                 .findById(UUID.fromString(classId))
-                .orElseThrow(() -> new RuntimeException("Class not found"));
+                .orElseThrow(() -> new NotFoundException("Class not found"));
 
         CustomUsersDetails userDetails = (CustomUsersDetails)
                 SecurityContextHolder.getContext().getAuthentication().getPrincipal();
         User user = userRepository
                 .findById(userDetails.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         Material material = Material.builder()
                 .title(request.getTitle())
@@ -47,13 +50,13 @@ public class MaterialService {
                 .user(user)
                 .build();
 
-        materialRepository.save(material);
+        return materialRepository.save(material).getId();
     }
 
     public MaterialResponseDTO getMaterialById(String materialId) {
         Material material = materialRepository
                 .findById(UUID.fromString(materialId))
-                .orElseThrow(() -> new RuntimeException("Material not found"));
+                .orElseThrow(() -> new NotFoundException("Material not found"));
 
         MaterialResponseDTO response = new MaterialResponseDTO();
 
@@ -72,7 +75,9 @@ public class MaterialService {
 
     public Page<MaterialResponseDTO> getAllMaterialsFromClass(String classId, Pageable pageable) {
         // Check class first
-        classesRepository.findById(UUID.fromString(classId)).orElseThrow(() -> new RuntimeException("Class not found"));
+        classesRepository
+                .findById(UUID.fromString(classId))
+                .orElseThrow(() -> new NotFoundException("Class not found"));
 
         Page<Material> materials = materialRepository.findByClassesId(UUID.fromString(classId), pageable);
 
@@ -91,10 +96,11 @@ public class MaterialService {
         });
     }
 
+    @Auditable(entityType = "material", action = "update", idExpr = "#materialId")
     public void editMaterial(MaterialRequestDTO request, String materialId) {
         Material material = materialRepository
                 .findById(UUID.fromString(materialId))
-                .orElseThrow(() -> new RuntimeException("Material not found"));
+                .orElseThrow(() -> new NotFoundException("Material not found"));
 
         material.setTitle(request.getTitle());
         material.setContent(request.getContent());
@@ -103,10 +109,11 @@ public class MaterialService {
         materialRepository.save(material);
     }
 
+    @Auditable(entityType = "material", action = "delete", idExpr = "#materialId")
     public void deleteMaterial(String materialId) {
         Material material = materialRepository
                 .findById(UUID.fromString(materialId))
-                .orElseThrow(() -> new RuntimeException("Material not found"));
+                .orElseThrow(() -> new NotFoundException("Material not found"));
 
         material.setDeletedAt(LocalDateTime.now());
 
