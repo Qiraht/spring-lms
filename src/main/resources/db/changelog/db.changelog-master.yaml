@@ -17,3 +17,7 @@ databaseChangeLog:
       file: db/changelog/scripts/create_assignment_submissions_table.sql
   - include: ## Student Progress Table
       file: db/changelog/scripts/create_student_progress_table.sql
+  - include: ## Audit Logs Table
+      file: db/changelog/scripts/create_audit_logs_table.sql
+  - include: ## Indexes
+      file: db/changelog/scripts/add_indexes.sql
