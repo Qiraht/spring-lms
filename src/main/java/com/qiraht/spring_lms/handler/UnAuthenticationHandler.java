@@ -21,7 +21,7 @@ public class UnAuthenticationHandler implements AuthenticationEntryPoint {
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
-        ApiResponse<?> body = ApiResponse.error(HttpStatus.FORBIDDEN.value(), authException.getMessage(), null);
+        ApiResponse<?> body = ApiResponse.error(HttpStatus.UNAUTHORIZED.value(), authException.getMessage(), null);
 
         response.getWriter().write(new ObjectMapper().writeValueAsString(body));
     }
