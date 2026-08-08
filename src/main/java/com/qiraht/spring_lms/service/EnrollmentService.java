@@ -5,11 +5,13 @@ import com.qiraht.spring_lms.dto.request.EnrollRequestDTO;
 import com.qiraht.spring_lms.entity.*;
 import com.qiraht.spring_lms.exception.NotFoundException;
 import com.qiraht.spring_lms.repository.*;
+import com.qiraht.spring_lms.security.CustomUsersDetails;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +25,7 @@ public class EnrollmentService {
     private final AssignmentRepository assignmentRepository;
     private final ClassesRepository classesRepository;
     private final UserRepository userRepository;
+    private final AuditService auditService;
 
     public boolean isTeacherOfClass(UUID userId, String classId) {
         return enrollmentRepository.existsByClassesIdAndUserIdAndRole(
@@ -78,6 +81,16 @@ public class EnrollmentService {
         }
 
         enrollmentRepository.saveAll(enrollments);
+
+        UUID actorId = currentUserId();
+        enrollments.forEach(enrollment -> auditService.record(
+                actorId,
+                "enrollment",
+                enrollment.getId(),
+                "create",
+                "success",
+                null,
+                auditService.snapshot(enrollment)));
     }
 
     @Transactional
@@ -88,5 +101,24 @@ public class EnrollmentService {
 
         enrollment.setDeletedAt(java.time.LocalDateTime.now());
         enrollmentRepository.save(enrollment);
+
+        auditService.record(
+                currentUserId(),
+                "enrollment",
+                enrollment.getId(),
+                "delete",
+                "success",
+                auditService.snapshot(enrollment),
+                null);
+    }
+
+    private UUID currentUserId() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null
+                && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof CustomUsersDetails userDetails) {
+            return userDetails.getUserId();
+        }
+        return null;
     }
 }

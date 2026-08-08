@@ -5,7 +5,9 @@ import com.qiraht.spring_lms.dto.request.MaterialRequestDTO;
 import com.qiraht.spring_lms.dto.response.MaterialResponseDTO;
 import com.qiraht.spring_lms.service.MaterialService;
 import com.qiraht.spring_lms.service.ProgressService;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -26,15 +28,15 @@ public class MaterialController {
     @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isTeacherOfClass(authentication.principal.userId, #classId)")
     public ResponseEntity<ApiResponse<?>> postMaterial(
             @PathVariable String classId, @RequestBody MaterialRequestDTO request) {
-        materialService.addMaterial(request, classId);
+        UUID id = materialService.addMaterial(request, classId);
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(201, "success", null));
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(201, "success", id));
     }
 
     @GetMapping("/class/{classId}")
     @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isEnrolledInClass(authentication.principal.userId, #classId)")
     public ResponseEntity<ApiResponse<Page<MaterialResponseDTO>>> getMaterials(
-            @PathVariable String classId, Pageable pageable) {
+            @PathVariable String classId, @ParameterObject Pageable pageable) {
         Page<MaterialResponseDTO> data = materialService.getAllMaterialsFromClass(classId, pageable);
 
         // TODO: Include class detail

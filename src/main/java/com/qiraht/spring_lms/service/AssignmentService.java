@@ -1,5 +1,6 @@
 package com.qiraht.spring_lms.service;
 
+import com.qiraht.spring_lms.annotation.Auditable;
 import com.qiraht.spring_lms.dto.request.AssignmentRequestDTO;
 import com.qiraht.spring_lms.dto.response.AssignmentResponseDTO;
 import com.qiraht.spring_lms.dto.response.AuthorDTO;
@@ -29,6 +30,7 @@ public class AssignmentService {
     private final ClassesRepository classesRepository;
     private final UserRepository userRepository;
 
+    @Auditable(entityType = "assignment", action = "create", idExpr = "#result")
     public String addAssignment(String classId, AssignmentRequestDTO request) {
         // Check class
         Classes classes = classesRepository
@@ -99,6 +101,7 @@ public class AssignmentService {
         });
     }
 
+    @Auditable(entityType = "assignment", action = "update", idExpr = "#assignmentId")
     public String editAssignment(String assignmentId, AssignmentRequestDTO request) {
         Assignment assignment = assignmentRepository
                 .findById(UUID.fromString(assignmentId))
@@ -114,6 +117,7 @@ public class AssignmentService {
         return assignment.getId().toString();
     }
 
+    @Auditable(entityType = "assignment", action = "delete", idExpr = "#assignmentId")
     public String deleteAssignment(String assignmentId) {
         Assignment assignment = assignmentRepository
                 .findById(UUID.fromString(assignmentId))

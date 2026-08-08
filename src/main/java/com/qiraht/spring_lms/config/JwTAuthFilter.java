@@ -34,7 +34,7 @@ public class JwTAuthFilter extends OncePerRequestFilter {
         try {
             String token = extractBearerToken(request);
 
-            if (token != null && jwtUtil.validateToken(token)) {
+            if (token != null && jwtUtil.validateToken(token) && jwtUtil.isAccessToken(token)) {
                 authenticateUser(token, request);
             }
         } catch (Exception e) {
@@ -80,6 +80,6 @@ public class JwTAuthFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getServletPath();
-        return path.startsWith("/api/auth/");
+        return path.equals("/api/auth") || path.equals("/api/auth/refresh");
     }
 }

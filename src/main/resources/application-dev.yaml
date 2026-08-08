@@ -7,16 +7,10 @@ spring:
     name: spring-lms
 
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:lmsdb}?allowPublicKeyRetrieval=true&SSL-mode=REQUIRED&serverTimezone=UTC
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:lmsdb?createDatabaseIfNotExist=true}
     username: ${DB_USER:root}
     password: ${DB_PASSWORD:supersecretpassword}
     driver-class-name: com.mysql.cj.jdbc.Driver
-
-  ## Liquibase
-  liquibase:
-    enabled: true
-    change-log: classpath:/db/changelog/db.changelog-master.yaml
-    default-schema: lmsdb
 
   jpa:
     hibernate:

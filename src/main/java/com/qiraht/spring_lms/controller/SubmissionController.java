@@ -6,6 +6,7 @@ import com.qiraht.spring_lms.dto.request.SubmissionRequestDTO;
 import com.qiraht.spring_lms.dto.response.SubmissionResponseDTO;
 import com.qiraht.spring_lms.service.SubmissionService;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -35,7 +36,7 @@ public class SubmissionController {
     @PreAuthorize(
             "hasRole('ADMIN') or @enrollmentService.isTeacherOfAssignment(authentication.principal.userId, #assignmentId)")
     public ResponseEntity<ApiResponse<Page<SubmissionResponseDTO>>> getAllSubmissions(
-            @PathVariable String assignmentId, Pageable pageable) {
+            @PathVariable String assignmentId, @ParameterObject Pageable pageable) {
         Page<SubmissionResponseDTO> data = submissionService.getAllSubmissions(assignmentId, pageable);
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), "success", data));
     }

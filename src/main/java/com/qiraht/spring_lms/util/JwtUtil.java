@@ -18,14 +18,20 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class JwtUtil {
-    @Value("${jwt.secret}")
-    private String secret;
+    @Value("${jwt.access.secret}")
+    private String accessSecret;
 
-    @Value("${jwt.expiration}")
-    private long expiration;
+    @Value("${jwt.access.expiration}")
+    private long accessExpiration;
+
+    @Value("${jwt.refresh.secret}")
+    private String refreshSecret;
+
+    @Value("${jwt.refresh.expiration}")
+    private long refreshExpiration;
 
     private SecretKey getSecretKey() {
-        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        return Keys.hmacShaKeyFor(accessSecret.getBytes(StandardCharsets.UTF_8));
     }
 
     public String extractEmail(String token) {
@@ -39,6 +45,14 @@ public class JwtUtil {
 
     public String extractRole(String token) {
         return extractClaim(token, claims -> claims.get("role", String.class));
+    }
+
+    public String extractType(String token) {
+        return extractClaim(token, claims -> claims.get("type", String.class));
+    }
+
+    public String extractJti(String token) {
+        return extractClaim(token, Claims::getId);
     }
 
     public Date extractExpiration(String token) {
@@ -62,22 +76,42 @@ public class JwtUtil {
         Map<String, Object> claims = new HashMap<>();
         claims.put("role", user.getRole().name()); // role for Bypass
         claims.put("userId", user.getId().toString()); // id for resource authorization
+        claims.put("type", "access");
 
-        return createToken(claims, user.getEmail());
+        return createToken(claims, user.getEmail(), accessExpiration);
     }
-    ;
 
-    private String createToken(Map<String, Object> claims, String subject) {
+    public String generateRefreshToken(User user) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("role", user.getRole().name());
+        claims.put("userId", user.getId().toString());
+        claims.put("type", "refresh");
+
+        return createToken(claims, user.getEmail(), refreshExpiration);
+    }
+
+    public boolean isAccessToken(String token) {
+        return "access".equals(extractType(token));
+    }
+
+    public boolean isRefreshToken(String token) {
+        return "refresh".equals(extractType(token));
+    }
+
+    // TODO: change this to createAccessToken
+    private String createToken(Map<String, Object> claims, String subject, long ttl) {
         return Jwts.builder()
                 .claims(claims)
                 .issuer("spring-lms-api")
+                .id(UUID.randomUUID().toString())
                 .subject(subject)
                 .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .expiration(new Date(System.currentTimeMillis() + ttl))
                 .signWith(getSecretKey())
                 .compact();
     }
 
+    // TODO: change this to validateAccessToken
     public boolean validateToken(String token) {
         try {
             extractAllClaims(token);
@@ -87,6 +121,8 @@ public class JwtUtil {
             return false;
         }
     }
+
+    // TODO: create new createRefreshToken and validateRefreshToken
 
     public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());

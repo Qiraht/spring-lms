@@ -1,5 +1,6 @@
 package com.qiraht.spring_lms.service;
 
+import com.qiraht.spring_lms.annotation.Auditable;
 import com.qiraht.spring_lms.dto.request.GradeRequestDTO;
 import com.qiraht.spring_lms.dto.request.SubmissionRequestDTO;
 import com.qiraht.spring_lms.dto.response.AuthorDTO;
@@ -32,6 +33,7 @@ public class SubmissionService {
     private final AssignmentRepository assignmentRepository;
     private final UserRepository userRepository;
 
+    @Auditable(entityType = "submission", action = "create", idExpr = "#result.id")
     public SubmissionResponseDTO submitAssignment(String assignmentId, SubmissionRequestDTO request) {
         Assignment assignment = assignmentRepository
                 .findById(UUID.fromString(assignmentId))
@@ -81,6 +83,7 @@ public class SubmissionService {
         return mapToDTO(submission);
     }
 
+    @Auditable(entityType = "submission", action = "update", idExpr = "#submissionId")
     public SubmissionResponseDTO gradeSubmission(String submissionId, GradeRequestDTO request) {
         AssignmentSubmission submission = submissionRepository
                 .findById(UUID.fromString(submissionId))

@@ -4,10 +4,36 @@ spring:
   profiles:
     active: dev
 
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  ## Liquibase
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+    default-schema: lmsdb
+
+
 ## JWT Secret key & Expiration
 jwt:
-  secret: ${JWT_SECRET:v6yB8p98p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p}
-  expiration: ${JWT_EXPIRATION:86400000}
+  access:
+    secret: ${JWT_ACCESS_SECRET:v6yB8p98p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p}
+    expiration: ${JWT_ACCESS_EXPIRATION:1800}
+  refresh:
+    secret: ${JWT_REFRESH_SECRET:89acecc6f3451cb0a09437fc377fa868a85697b40f0bf5858311c083a2209bd6}
+    expiration: ${JWT_REFRESH_EXPIRATION:86400}
+
+
+resilience4j:
+  ratelimiter:
+    configs:
+      default:
+        limit-for-period: 100
+        limit-refresh-period: 60s
+        timeout-duration: 1500ms
+        register-health-indicator: false
 
 server:
   forward-headers-strategy: FRAMEWORK

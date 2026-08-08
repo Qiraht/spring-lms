@@ -7,7 +7,9 @@ import com.qiraht.spring_lms.entity.Classes;
 import com.qiraht.spring_lms.service.ClassesService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -29,18 +31,18 @@ public class ClassesController {
             description = "Create new Class. Authentication Needed and role 'Admin' needed ")
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')") // Admin only can create class
-    public ResponseEntity<ApiResponse<Void>> postClass(@RequestBody ClassRequestDTO request) {
-        classesService.createClass(request);
+    public ResponseEntity<ApiResponse<UUID>> postClass(@RequestBody ClassRequestDTO request) {
+        UUID id = classesService.createClass(request);
 
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.success(HttpStatus.CREATED.value(), "Class created successfully", null));
+                .body(ApiResponse.success(HttpStatus.CREATED.value(), "Class created successfully", id));
     }
 
     @Tag(name = "Class")
     @Operation(summary = "Get All Classes", description = "Return All Classes. Authentication Needed")
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','USER')") // Any Authenticated
-    public ResponseEntity<ApiResponse<Page<ClassResponseDTO>>> getAllClasses(Pageable pageable) {
+    public ResponseEntity<ApiResponse<Page<ClassResponseDTO>>> getAllClasses(@ParameterObject Pageable pageable) {
         Page<ClassResponseDTO> data = classesService.getAllClasses(pageable);
 
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(HttpStatus.OK.value(), "success", data));

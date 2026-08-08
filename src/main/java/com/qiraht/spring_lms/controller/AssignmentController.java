@@ -5,6 +5,7 @@ import com.qiraht.spring_lms.dto.request.AssignmentRequestDTO;
 import com.qiraht.spring_lms.dto.response.AssignmentResponseDTO;
 import com.qiraht.spring_lms.service.AssignmentService;
 import lombok.RequiredArgsConstructor;
+import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -43,7 +44,7 @@ public class AssignmentController {
     @GetMapping("/class/{classId}")
     @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isEnrolledInClass(authentication.principal.userId, #classId)")
     public ResponseEntity<ApiResponse<Page<AssignmentResponseDTO>>> getAssignmentByClassId(
-            @PathVariable String classId, Pageable pageable) {
+            @PathVariable String classId, @ParameterObject Pageable pageable) {
         Page<AssignmentResponseDTO> data = assignmentService.getAssignmentsByClass(classId, pageable);
 
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(HttpStatus.OK.value(), "success", data));

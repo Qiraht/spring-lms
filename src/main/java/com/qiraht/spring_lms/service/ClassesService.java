@@ -1,5 +1,6 @@
 package com.qiraht.spring_lms.service;
 
+import com.qiraht.spring_lms.annotation.Auditable;
 import com.qiraht.spring_lms.dto.request.ClassRequestDTO;
 import com.qiraht.spring_lms.dto.response.ClassResponseDTO;
 import com.qiraht.spring_lms.entity.Classes;
@@ -20,7 +21,8 @@ import org.springframework.stereotype.Service;
 public class ClassesService {
     private final ClassesRepository classesRepository;
 
-    public void createClass(ClassRequestDTO request) {
+    @Auditable(entityType = "class", action = "create", idExpr = "#result")
+    public UUID createClass(ClassRequestDTO request) {
         log.info("Creating class: {}", request.getName());
 
         Classes _class = Classes.builder()
@@ -28,7 +30,7 @@ public class ClassesService {
                 .description(request.getDescription())
                 .build();
 
-        classesRepository.save(_class);
+        return classesRepository.save(_class).getId();
     }
 
     public Page<ClassResponseDTO> getAllClasses(Pageable pageable) {
@@ -51,6 +53,7 @@ public class ClassesService {
         return responseDTO;
     }
 
+    @Auditable(entityType = "class", action = "update", idExpr = "#id")
     public void updateClass(String id, ClassRequestDTO request) {
         log.info("Putting class: {}", request.getName());
         Classes classes = classesRepository
@@ -63,6 +66,7 @@ public class ClassesService {
         classesRepository.save(classes);
     }
 
+    @Auditable(entityType = "class", action = "delete", idExpr = "#id")
     public void deleteClass(String id) {
         log.info("Deleting class: {}", id);
         Classes classes = classesRepository
