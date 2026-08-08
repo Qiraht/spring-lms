@@ -35,3 +35,5 @@ build/
 ## Environment Variables ##
 .env
 .env.*
+# Added by code-review-graph
+.code-review-graph/
