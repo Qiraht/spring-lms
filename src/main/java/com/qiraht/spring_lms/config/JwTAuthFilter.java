@@ -34,7 +34,7 @@ public class JwTAuthFilter extends OncePerRequestFilter {
         try {
             String token = extractBearerToken(request);
 
-            if (token != null && jwtUtil.validateToken(token) && jwtUtil.isAccessToken(token)) {
+            if (token != null && jwtUtil.validateAccessToken(token)) {
                 authenticateUser(token, request);
             }
         } catch (Exception e) {

@@ -2,11 +2,13 @@ package com.qiraht.spring_lms.service;
 
 import com.qiraht.spring_lms.dto.request.LoginRequestDTO;
 import com.qiraht.spring_lms.dto.response.LoginResponseDTO;
+import com.qiraht.spring_lms.dto.response.RefreshTokenResponseDTO;
 import com.qiraht.spring_lms.entity.User;
 import com.qiraht.spring_lms.exception.AuthenticationException;
 import com.qiraht.spring_lms.exception.NotFoundException;
 import com.qiraht.spring_lms.repository.UserRepository;
 import com.qiraht.spring_lms.util.JwtUtil;
+import java.time.Duration;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +27,7 @@ public class AuthService {
     private final AuditService auditService;
 
     @Value("${jwt.access.expiration}")
-    private long accessTokenExpiration;
+    private Duration accessTokenExpiration;
 
     public LoginResponseDTO LoginUser(LoginRequestDTO request) {
         User user = userRepository.findByEmail(request.getEmail()).orElse(null);
@@ -53,7 +55,7 @@ public class AuthService {
 
             auditService.record(user.getId(), "user", user.getId(), "login", "success", null, null);
 
-            return new LoginResponseDTO(user.getEmail(), accessToken, refreshToken, accessTokenExpiration);
+            return new LoginResponseDTO(user.getEmail(), accessToken, refreshToken, accessTokenExpiration.toSeconds());
         } catch (Exception ex) {
             if (user != null) {
                 auditService.record(user.getId(), "user", user.getId(), "login", "failed", null, null);
@@ -62,8 +64,8 @@ public class AuthService {
         }
     }
 
-    public LoginResponseDTO RefreshToken(String refreshToken) {
-        if (!jwtUtil.validateToken(refreshToken) || !jwtUtil.isRefreshToken(refreshToken)) {
+    public RefreshTokenResponseDTO RefreshToken(String refreshToken) {
+        if (!jwtUtil.validateRefreshToken(refreshToken)) {
             throw new AuthenticationException("Invalid refresh token");
         }
 
@@ -80,18 +82,13 @@ public class AuthService {
             throw new AuthenticationException("User is inactive!");
         }
 
-        // Rotate: revoke old refresh token, issue a new one
-        refreshTokenService.revoke(jti, userId);
-
         String newAccessToken = jwtUtil.generateToken(user);
-        String newRefreshToken = jwtUtil.generateRefreshToken(user);
-        refreshTokenService.save(jwtUtil.extractJti(newRefreshToken), userId);
 
         auditService.record(userId, "user", userId, "refresh", "success", null, null);
 
         log.info("User {} refreshed token", user.getEmail());
 
-        return new LoginResponseDTO(user.getEmail(), newAccessToken, newRefreshToken, accessTokenExpiration);
+        return new RefreshTokenResponseDTO(user.getEmail(), newAccessToken, accessTokenExpiration.toSeconds());
     }
 
     public void Logout(UUID userId) {

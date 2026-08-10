@@ -4,6 +4,7 @@ import com.qiraht.spring_lms.dto.ApiResponse;
 import com.qiraht.spring_lms.dto.request.LoginRequestDTO;
 import com.qiraht.spring_lms.dto.request.RefreshTokenRequestDTO;
 import com.qiraht.spring_lms.dto.response.LoginResponseDTO;
+import com.qiraht.spring_lms.dto.response.RefreshTokenResponseDTO;
 import com.qiraht.spring_lms.security.CustomUsersDetails;
 import com.qiraht.spring_lms.service.AuthService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,7 +31,7 @@ public class AuthController {
     @Operation(
             summary = "Post Auth User",
             description = "Authenticate user and return JWT access + refresh token. Public API")
-    @PostMapping
+    @PostMapping("/login")
     public ResponseEntity<ApiResponse<Object>> postLogin(@RequestBody LoginRequestDTO request) {
         LoginResponseDTO data = authService.LoginUser(request);
 
@@ -45,10 +46,10 @@ public class AuthController {
     @Tag(name = "Auth")
     @Operation(
             summary = "Refresh Token",
-            description = "Exchange a valid refresh token for a new access + refresh token. Public API")
+            description = "Exchange a valid refresh token for a new access token. Public API")
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<Object>> postRefresh(@RequestBody RefreshTokenRequestDTO request) {
-        LoginResponseDTO data = authService.RefreshToken(request.getRefreshToken());
+        RefreshTokenResponseDTO data = authService.RefreshToken(request.getRefreshToken());
 
         return ResponseEntity.status(HttpStatus.OK)
                 .body(ApiResponse.builder()

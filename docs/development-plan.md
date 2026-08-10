@@ -6,7 +6,7 @@ plus full documentation for a separate consumer microservice.
 
 ## Current Status
 
-> **Day 1 is complete.** As of the end of Day 1 the following is in place:
+> **Days 1–2 are complete.** As of the end of Day 2 the following is in place:
 > - Spring Boot **4.1.0** / Spring Framework 7.0.8; `spring-boot-starter-aspectj`
 >   (note: `spring-boot-starter-aop` was **renamed** to `spring-boot-starter-aspectj` in Boot 4),
 >   plus `spring-data-redis`, `resilience4j`, `springdoc 3.0.2` deps (`d3f94ab`)
@@ -17,8 +17,8 @@ plus full documentation for a separate consumer microservice.
 > - Audit aspect resilience: `safeRecord(...)` helper so a failed audit write never masks the
 >   original exception (both success + failure paths) — `4d953ea`
 > - Swagger: audit-logs `Pageable` rendered as optional `page`/`size`/`sort` via `@ParameterObject`
->   + `@PageableDefault(sort = "createdAt", direction = DESC)` — newest-first default
->   (**uncommitted**, pending Day 2 cleanup)
+>   + `@PageableDefault(sort = "createdAt", direction = DESC)` — newest-first default;
+>   `@ParameterObject` applied to the other 4 bare-`Pageable` controllers
 > - **DB indexes** changeset (`add_indexes.sql`): `users.email` → `VARCHAR(255)` + UNIQUE,
 >   `class_enrollments(class_id, user_id, role)`, `assignment_submissions(assignment_id, user_id)`,
 >   `audit_logs(created_at)` — `87f25fe`
@@ -30,15 +30,14 @@ plus full documentation for a separate consumer microservice.
 > - **Service exception cleanup**: `RuntimeException` → proper exceptions (MaterialService,
 >   UserService, ProgressService, AuthService); login returns 401 for both unknown email and
 >   wrong password (anti-enumeration) — `583af66`
-> - Boot blockers fixed: `@Value("${jwt.access.expiration}")` / `@Value("${jwt.refresh.expiration}")`
->   placeholders now match `application.yaml` keys; dev datasource uses
->   `createDatabaseIfNotExist=true`
-> - Day 2 auth code exists **as uncommitted WIP**: `JwtUtil` access+refresh tokens,
->   `RefreshTokenService` (Redis, **untracked**), `RefreshTokenRequestDTO` (**untracked**),
->   `AuthService` login/refresh/logout with auth-event auditing, `AuthController` endpoints,
->   updated `LoginResponseDTO`, `SecurityConfig` + `JwTAuthFilter`
-> - **Still pending**: finish + commit Day 2 auth hardening, docker-compose infra (redis service,
->   env files), RabbitMQ + consumer (Days 3–4), docs and admin bootstrap (Day 5)
+> - **Day 2 auth hardening** (uncommitted WIP, `JwtUtil`/`AuthService`/`RefreshTokenService`/
+>   `AuthController`/`JwTAuthFilter`/`SecurityConfig` + new `RefreshTokenResponseDTO`):
+>   distinct `accessSecret`/`refreshSecret` (refresh tokens signed + validated with `refreshSecret`),
+>   expiration config as Spring-native `Duration` strings (`access` **30m**, `refresh` **1d**),
+>   non-rotating refresh (new access token only; refresh token valid until 1d expiry or logout),
+>   logout revokes all user refresh tokens in Redis, access-token-only filter guard
+> - **Still pending**: RabbitMQ + consumer (Days 3–4), docker-compose infra + env wiring
+>   (moved to Day 5), docs and admin bootstrap (Day 5)
 
 ---
 
@@ -57,21 +56,24 @@ plus full documentation for a separate consumer microservice.
 - Exception-handler overhaul + `ConflictException` — `9f17012`
 - Service exception cleanup + login anti-enumeration — `583af66`
 
-## Day 2 — Auth hardening (refresh + logout + config) 🔄 IN PROGRESS
+## Day 2 — Auth hardening (refresh + logout + config) ✅ DONE
 
-Most code already exists as uncommitted WIP; this day is about finishing, validating, and committing it cleanly.
+Auth hardening was finished, compiled, spotless-formatted, and manually verified. Note: the
+refresh flow ended up **non-rotating** (new access token only) — a deliberate deviation from
+the original "rotation" wording below, confirmed with the user.
 
 | Task | Details | Status |
 | ---- | ------- | ------ |
-| Reorganize bundled WIP | Split the Day-2/audit work bundled into `583af66` (AuthService refresh/logout, `@Auditable` annotations, audit `record` calls) into its own commit; commit `RefreshTokenService` + `RefreshTokenRequestDTO` (untracked) | ⬜ |
-| Security config | `SecurityConfig`: permit only `/api/auth` and `/api/auth/refresh`; `logout` requires auth (currently permits `/api/auth/**`, logout is public) | 🔄 WIP |
-| Filter guard | `JwTAuthFilter`: only accept tokens where `jwtUtil.isAccessToken(token)`; currently accepts any valid token and skips all `/api/auth/` | 🔄 WIP |
-| App config | `application.yaml` + dev/prod: `jwt.refresh-expiration`, `spring.data.redis.host/port`; **fix typo** `jwt.refresh.expiration` default `${JWT_ACCESS_EXPIRATION:86400}` → `${JWT_REFRESH_EXPIRATION:86400}` | ⬜ |
-| Infra | docker-compose: add `redis` (6379) — **note: `valkey` (Redis-compatible) already running in Docker on 6379**; update `.env` / `example.env` with `REDIS_*`, `JWT_REFRESH_EXPIRATION` | ⬜ |
-| Swagger cleanup | Commit the `@ParameterObject`/`@PageableDefault` change on audit-logs; optionally apply `@ParameterObject` to the other 4 bare-`Pageable` controllers | ⬜ |
-| Manual verification | login → `{ accessToken, refreshToken, expiresIn }`; use refresh token → new pair (rotation); logout → refresh fails with "revoked"; wrong password → audit row `login/failed` | ⬜ |
+| Security config | `SecurityConfig`: permits only `POST /api/auth` and `POST /api/auth/refresh`; every other route (incl. `logout`) requires auth | ✅ |
+| Filter guard | `JwTAuthFilter`: only accepts tokens passing `jwtUtil.validateAccessToken(token)` (access tokens only) | ✅ |
+| Separate secrets | `JwtUtil`: distinct `accessSecret`/`refreshSecret`; refresh tokens are signed AND validated with `refreshSecret` | ✅ |
+| Expiration config | `jwt.access.expiration: ${JWT_ACCESS_EXPIRATION:30m}` / `jwt.refresh.expiration: ${JWT_REFRESH_EXPIRATION:1d}` — Spring-native `Duration` strings (fixed the old ms/seconds mismatch; refresh typo `JWT_ACCESS_EXPIRATION` → `JWT_REFRESH_EXPIRATION` resolved) | ✅ |
+| Refresh response | `POST /api/auth/refresh` → new `RefreshTokenResponseDTO` (`email`, `accessToken`, `expiresIn`); refresh token is NOT rotated/revoked — stays valid until its 1d expiry or logout; new refresh token only via re-login | ✅ |
+| Swagger cleanup | `@ParameterObject` applied to all 5 bare-`Pageable` controllers; audit-logs keeps `@PageableDefault(sort = createdAt, DESC)` | ✅ |
+| Manual verification | login → `{ accessToken, refreshToken, expiresIn: 1800 }`; refresh → new access token, same refresh token stays valid; logout → refresh fails with "revoked"; Redis stores `refresh:token:*` / `refresh:user:*`; login/refresh/logout audited | ✅ |
 
-**Deliverable:** stateful logout + refresh rotation backed by Redis.
+**Deliverable:** stateful logout + non-rotating refresh backed by Redis (refresh token stays
+valid until 1d expiry or logout; new refresh token issued only by re-login).
 
 ## Day 3 — RabbitMQ export publisher (API side)
 
@@ -107,8 +109,9 @@ Most code already exists as uncommitted WIP; this day is about finishing, valida
 | Task | Details |
 | ---- | ------- |
 | Admin bootstrap | Manual SQL (documented): `UPDATE users SET role = 'ADMIN' WHERE email = '<email>';` |
+| Infra — Redis | docker-compose: add `redis` service (6379) — **note: `valkey` (Redis-compatible) already running in Docker on 6379**; pass `REDIS_HOST`/`REDIS_PORT` to the API service |
 | Architecture doc | Update `docs/architecture.md` (ER `audit_logs`, Redis/RabbitMQ/Mailpit/consumer diagrams, admin note) |
-| `.env` / `example.env` | Finalize all vars: `RABBITMQ_*`, `REDIS_*`, `SMTP_*`, `JWT_REFRESH_EXPIRATION` |
+| `.env` / `example.env` | Finalize all vars: `REDIS_*`, `JWT_*` (access/refresh secrets + `JWT_ACCESS_EXPIRATION`/`JWT_REFRESH_EXPIRATION`), `RABBITMQ_*`, `SMTP_*` |
 | Final verification | `mvn clean package -DskipTests`; end-to-end demo run; spotless formatting (`./mvnw spotless:apply`); confirm all DB changesets applied |
 
 **Deliverable:** polished, documented, demo-ready feature set.
@@ -120,7 +123,7 @@ Most code already exists as uncommitted WIP; this day is about finishing, valida
 1. `docker compose up -d rabbitmq redis mailpit` — MySQL + Valkey already run as Docker containers (`mysql`, `valkey` on 6379)
 2. Start API against local MySQL (`mvn spring-boot:run`) — Liquibase applies pending changesets on startup
 3. Register a user → promote to ADMIN via SQL
-4. Login → capture tokens → exercise refresh + logout
+4. Login → capture tokens → refresh (new access token only; refresh token stays valid) → logout (refresh token revoked)
 5. Create class → material → assignment → enroll students → submit → grade
 6. Query `/api/audit-logs` (ADMIN) and check the filter queries
 7. `POST /api/class/{classId}/export` → observe message in RabbitMQ UI
@@ -131,12 +134,12 @@ Most code already exists as uncommitted WIP; this day is about finishing, valida
 - **Uncommitted WIP is the norm, not the exception.** The working tree is intentionally dirty (Day-2 WIP, formatting, docs). Always stage only the files for the current task; double-check `git status` before committing. `docs/`, `RefreshTokenService`, and `RefreshTokenRequestDTO` are untracked — the first docs commit should include `docs/`.
 - **DB access (read-only for the assistant).** MySQL and Valkey run in Docker (`docker ps`: `mysql`, `valkey`, `portainer`). There is **no local `mysql` CLI in WSL** — query via `docker exec mysql mysql -u root -p<pass> lmsdb ...`. The assistant may only **read** the DB; all schema changes are applied through **Liquibase changesets** when the app starts.
 - **UUIDs are stored as `BINARY(16)`.** DBeaver renders them as garbled bytes — use `SELECT BIN_TO_UUID(id) ...` to read them. Hibernate generates UUIDv4 client-side; the schema default `UUID_TO_BIN(UUID())` only affects raw SQL inserts, not app writes.
-- **Config footguns.** `application.yaml` `jwt.refresh.expiration` default currently references `${JWT_ACCESS_EXPIRATION:86400}` (should be `JWT_REFRESH_EXPIRATION`). The app runs on **8080**; `.env`'s `APP_PORT=8081` is not auto-loaded by Spring (no dotenv dependency) — it only matters when wiring Docker Compose.
+- **Config footguns.** `jwt.*` expirations use Spring-native `Duration` strings (`access` `30m`, `refresh` `1d`) — always include a unit (a bare number means **ms**). The app runs on **8080**; `.env`'s `APP_PORT=8081` is not auto-loaded by Spring (no dotenv dependency) — it only matters when wiring Docker Compose.
 - **Swagger + `Pageable`.** A bare `Pageable` controller param renders as a required collapsed object in Swagger. Use `@ParameterObject` (flattens to optional `page`/`size`/`sort`) + `@PageableDefault` for per-endpoint defaults. Audit-logs is fixed; 4 other controllers still use bare `Pageable`.
 - **Boot 4 renames.** `spring-boot-starter-aop` → `spring-boot-starter-aspectj`. Watch for other Spring Framework 7 / Boot 4 API renames when adding dependencies.
 - **Changelog registration is easy to miss.** `create_audit_logs_table.sql` was added but never registered in `db.changelog-master.yaml` (fixed in `87f25fe`). Always append new scripts to the master changelog, or a fresh DB silently lacks the table.
 - **Login security.** Unknown email and wrong password both return 401 — deliberate anti-enumeration. Don't "fix" it back to a 404.
-- **JWT placeholders.** The `@Value` keys are `jwt.access.expiration` / `jwt.refresh.expiration` (dotted), matching `application.yaml`. Keep `JwtUtil`'s `type`/`jti` claims consistent with the filter guard (Day 2).
+- **JWT placeholders.** The `@Value` keys are `jwt.access.expiration` / `jwt.refresh.expiration` (dotted), matching `application.yaml`. The filter guard accepts **access** tokens only (`validateAccessToken`); refresh tokens (signed with `refreshSecret`) must not be used as bearer credentials.
 
 ## LF line-ending enforcement (deferred)
 

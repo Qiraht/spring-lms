@@ -5,6 +5,8 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,16 +24,20 @@ public class JwtUtil {
     private String accessSecret;
 
     @Value("${jwt.access.expiration}")
-    private long accessExpiration;
+    private Duration accessExpiration;
 
     @Value("${jwt.refresh.secret}")
     private String refreshSecret;
 
     @Value("${jwt.refresh.expiration}")
-    private long refreshExpiration;
+    private Duration refreshExpiration;
 
-    private SecretKey getSecretKey() {
+    private SecretKey getAccessSecretKey() {
         return Keys.hmacShaKeyFor(accessSecret.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private SecretKey getRefreshSecretKey() {
+        return Keys.hmacShaKeyFor(refreshSecret.getBytes(StandardCharsets.UTF_8));
     }
 
     public String extractEmail(String token) {
@@ -47,16 +53,8 @@ public class JwtUtil {
         return extractClaim(token, claims -> claims.get("role", String.class));
     }
 
-    public String extractType(String token) {
-        return extractClaim(token, claims -> claims.get("type", String.class));
-    }
-
     public String extractJti(String token) {
         return extractClaim(token, Claims::getId);
-    }
-
-    public Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
@@ -65,11 +63,15 @@ public class JwtUtil {
     }
 
     private Claims extractAllClaims(String token) {
-        return Jwts.parser()
-                .verifyWith(getSecretKey())
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        try {
+            return parseSignedClaims(token, getAccessSecretKey());
+        } catch (Exception e) {
+            return parseSignedClaims(token, getRefreshSecretKey());
+        }
+    }
+
+    private Claims parseSignedClaims(String token, SecretKey key) {
+        return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
     }
 
     public String generateToken(User user) {
@@ -78,7 +80,7 @@ public class JwtUtil {
         claims.put("userId", user.getId().toString()); // id for resource authorization
         claims.put("type", "access");
 
-        return createToken(claims, user.getEmail(), accessExpiration);
+        return createToken(claims, user.getEmail(), accessExpiration, getAccessSecretKey());
     }
 
     public String generateRefreshToken(User user) {
@@ -87,44 +89,37 @@ public class JwtUtil {
         claims.put("userId", user.getId().toString());
         claims.put("type", "refresh");
 
-        return createToken(claims, user.getEmail(), refreshExpiration);
+        return createToken(claims, user.getEmail(), refreshExpiration, getRefreshSecretKey());
     }
 
-    public boolean isAccessToken(String token) {
-        return "access".equals(extractType(token));
-    }
-
-    public boolean isRefreshToken(String token) {
-        return "refresh".equals(extractType(token));
-    }
-
-    // TODO: change this to createAccessToken
-    private String createToken(Map<String, Object> claims, String subject, long ttl) {
+    private String createToken(Map<String, Object> claims, String subject, Duration ttl, SecretKey key) {
+        Instant now = Instant.now();
         return Jwts.builder()
                 .claims(claims)
                 .issuer("spring-lms-api")
                 .id(UUID.randomUUID().toString())
                 .subject(subject)
-                .issuedAt(new Date(System.currentTimeMillis()))
-                .expiration(new Date(System.currentTimeMillis() + ttl))
-                .signWith(getSecretKey())
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plus(ttl)))
+                .signWith(key)
                 .compact();
     }
 
-    // TODO: change this to validateAccessToken
-    public boolean validateToken(String token) {
+    public boolean validateAccessToken(String token) {
+        return isValid(token, getAccessSecretKey());
+    }
+
+    public boolean validateRefreshToken(String token) {
+        return isValid(token, getRefreshSecretKey());
+    }
+
+    private boolean isValid(String token, SecretKey key) {
         try {
-            extractAllClaims(token);
-            return !isTokenExpired(token);
+            Claims claims = parseSignedClaims(token, key);
+            return !claims.getExpiration().before(new Date());
         } catch (Exception e) {
             log.error("JWT validation error: {}", e.getMessage());
             return false;
         }
-    }
-
-    // TODO: create new createRefreshToken and validateRefreshToken
-
-    public boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
     }
 }

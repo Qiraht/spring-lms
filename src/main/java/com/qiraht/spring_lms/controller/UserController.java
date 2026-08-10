@@ -24,7 +24,7 @@ public class UserController {
 
     @Tag(name = "User")
     @Operation(summary = "Post Register User", description = "Register new User with default role 'USER'. Public API")
-    @PostMapping
+    @PostMapping("/register")
     public ResponseEntity<ApiResponse<UUID>> postRegister(@RequestBody RegisterRequestDTO request) {
         UUID data = userService.RegisterUser(request);
 

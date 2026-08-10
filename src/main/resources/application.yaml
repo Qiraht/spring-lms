@@ -20,10 +20,10 @@ spring:
 jwt:
   access:
     secret: ${JWT_ACCESS_SECRET:v6yB8p98p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p}
-    expiration: ${JWT_ACCESS_EXPIRATION:1800}
+    expiration: ${JWT_ACCESS_EXPIRATION:30m}
   refresh:
     secret: ${JWT_REFRESH_SECRET:89acecc6f3451cb0a09437fc377fa868a85697b40f0bf5858311c083a2209bd6}
-    expiration: ${JWT_REFRESH_EXPIRATION:86400}
+    expiration: ${JWT_REFRESH_EXPIRATION:1d}
 
 
 resilience4j:

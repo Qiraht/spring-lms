@@ -20,22 +20,15 @@ public class RefreshTokenService {
     private final StringRedisTemplate redisTemplate;
 
     @Value("${jwt.refresh.expiration}")
-    private long refreshExpiration;
+    private Duration refreshExpiration;
 
     public void save(String jti, UUID userId) {
-        redisTemplate.opsForValue().set(REFRESH_KEY + jti, userId.toString(), Duration.ofMillis(refreshExpiration));
+        redisTemplate.opsForValue().set(REFRESH_KEY + jti, userId.toString(), refreshExpiration);
         redisTemplate.opsForSet().add(USER_REFRESH_KEY + userId, jti);
     }
 
     public boolean isValid(String jti) {
         return Boolean.TRUE.equals(redisTemplate.hasKey(REFRESH_KEY + jti));
-    }
-
-    public void revoke(String jti, UUID userId) {
-        redisTemplate.delete(REFRESH_KEY + jti);
-        if (userId != null) {
-            redisTemplate.opsForSet().remove(USER_REFRESH_KEY + userId, jti);
-        }
     }
 
     public void revokeAllForUser(UUID userId) {
