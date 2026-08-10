@@ -5,6 +5,7 @@ import com.qiraht.spring_lms.exception.AuthenticationException;
 import com.qiraht.spring_lms.exception.AuthorizationException;
 import com.qiraht.spring_lms.exception.ConflictException;
 import com.qiraht.spring_lms.exception.NotFoundException;
+import com.qiraht.spring_lms.exception.ServiceUnavailableException;
 import com.qiraht.spring_lms.exception.ValidationException;
 import jakarta.validation.ConstraintViolationException;
 import java.util.stream.Collectors;
@@ -112,6 +113,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleConflict(ConflictException ex) {
         log.warn("Conflict: {}", ex.getMessage());
         return error(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    // Service Unavailable Error (e.g. dependency down)
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public ResponseEntity<ApiResponse<?>> handleServiceUnavailable(ServiceUnavailableException ex) {
+        log.error("Service unavailable: {}", ex.getMessage());
+        return error(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
     }
 
     // Server Error

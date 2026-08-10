@@ -2,6 +2,7 @@ package com.qiraht.spring_lms.controller;
 
 import com.qiraht.spring_lms.dto.ApiResponse;
 import com.qiraht.spring_lms.dto.request.ClassRequestDTO;
+import com.qiraht.spring_lms.dto.request.ExportRequestDTO;
 import com.qiraht.spring_lms.dto.response.ClassResponseDTO;
 import com.qiraht.spring_lms.entity.Classes;
 import com.qiraht.spring_lms.service.ClassesService;
@@ -82,5 +83,20 @@ public class ClassesController {
         classesService.deleteClass(id);
 
         return ResponseEntity.ok(ApiResponse.success(200, "success", null));
+    }
+
+    @Tag(name = "Class")
+    @Operation(
+            summary = "Export Class Progress",
+            description =
+                    "Queue a progress report export for a class. Authentication Needed and role 'TEACHER' (User role 'ADMIN' can bypass this). Returns 202 Accepted once the export is queued.")
+    @PostMapping("/{id}/export")
+    @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isTeacherOfClass(authentication.principal.userId, #id)")
+    public ResponseEntity<ApiResponse<Void>> exportClassProgress(
+            @PathVariable("id") String id, @RequestBody(required = false) ExportRequestDTO request) {
+        classesService.exportProgress(id, request);
+
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+                .body(ApiResponse.success(HttpStatus.ACCEPTED.value(), "Progress report export queued", null));
     }
 }

@@ -1,0 +1,12 @@
+package com.qiraht.spring_lms.dto.request;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class ExportRequestDTO {
+    private String recipientEmail;
+}
