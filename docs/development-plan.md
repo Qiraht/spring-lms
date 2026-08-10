@@ -6,7 +6,8 @@ plus full documentation for a separate consumer microservice.
 
 ## Current Status
 
-> **Days 1–2 are complete.** As of the end of Day 2 the following is in place:
+> **Days 1–3 are complete (Day 3 code in; its live end-to-end verification is pending demo
+> seed data).** As of the end of Day 2 the following is in place:
 > - Spring Boot **4.1.0** / Spring Framework 7.0.8; `spring-boot-starter-aspectj`
 >   (note: `spring-boot-starter-aop` was **renamed** to `spring-boot-starter-aspectj` in Boot 4),
 >   plus `spring-data-redis`, `resilience4j`, `springdoc 3.0.2` deps (`d3f94ab`)
@@ -36,8 +37,12 @@ plus full documentation for a separate consumer microservice.
 >   expiration config as Spring-native `Duration` strings (`access` **30m**, `refresh` **1d**),
 >   non-rotating refresh (new access token only; refresh token valid until 1d expiry or logout),
 >   logout revokes all user refresh tokens in Redis, access-token-only filter guard
-> - **Still pending**: RabbitMQ + consumer (Days 3–4), docker-compose infra + env wiring
->   (moved to Day 5), docs and admin bootstrap (Day 5)
+> - **Day 3 (RabbitMQ export publisher)** code-complete: `spring-boot-starter-amqp`, `RabbitMQConfig`
+>   (exchange/queue/DLQ + explicit `RabbitAdmin`), `ProgressReportPublisher` with
+>   `@CircuitBreaker("rabbitmq-publish")`, `POST /api/class/{id}/export` → 202 + audited,
+>   fallback → 503; e2e verification pending demo seed data (see Day 3 below)
+> - **Still pending**: consumer microservice docs + Mailpit (Day 4), docker-compose polish,
+>   admin bootstrap + final docs (Day 5)
 
 ---
 
@@ -62,36 +67,48 @@ Auth hardening was finished, compiled, spotless-formatted, and manually verified
 refresh flow ended up **non-rotating** (new access token only) — a deliberate deviation from
 the original "rotation" wording below, confirmed with the user.
 
-| Task | Details | Status |
-| ---- | ------- | ------ |
-| Security config | `SecurityConfig`: permits only `POST /api/auth` and `POST /api/auth/refresh`; every other route (incl. `logout`) requires auth | ✅ |
-| Filter guard | `JwTAuthFilter`: only accepts tokens passing `jwtUtil.validateAccessToken(token)` (access tokens only) | ✅ |
-| Separate secrets | `JwtUtil`: distinct `accessSecret`/`refreshSecret`; refresh tokens are signed AND validated with `refreshSecret` | ✅ |
-| Expiration config | `jwt.access.expiration: ${JWT_ACCESS_EXPIRATION:30m}` / `jwt.refresh.expiration: ${JWT_REFRESH_EXPIRATION:1d}` — Spring-native `Duration` strings (fixed the old ms/seconds mismatch; refresh typo `JWT_ACCESS_EXPIRATION` → `JWT_REFRESH_EXPIRATION` resolved) | ✅ |
-| Refresh response | `POST /api/auth/refresh` → new `RefreshTokenResponseDTO` (`email`, `accessToken`, `expiresIn`); refresh token is NOT rotated/revoked — stays valid until its 1d expiry or logout; new refresh token only via re-login | ✅ |
-| Swagger cleanup | `@ParameterObject` applied to all 5 bare-`Pageable` controllers; audit-logs keeps `@PageableDefault(sort = createdAt, DESC)` | ✅ |
-| Manual verification | login → `{ accessToken, refreshToken, expiresIn: 1800 }`; refresh → new access token, same refresh token stays valid; logout → refresh fails with "revoked"; Redis stores `refresh:token:*` / `refresh:user:*`; login/refresh/logout audited | ✅ |
+| Task | Details | Status   |
+| ---- | ------- |----------|
+| Security config | `SecurityConfig`: permits only `POST /api/auth` and `POST /api/auth/refresh`; every other route (incl. `logout`) requires auth | ✅       |
+| Filter guard | `JwTAuthFilter`: only accepts tokens passing `jwtUtil.validateAccessToken(token)` (access tokens only) | ✅       |
+| Separate secrets | `JwtUtil`: distinct `accessSecret`/`refreshSecret`; refresh tokens are signed AND validated with `refreshSecret` | ✅       |
+| Expiration config | `jwt.access.expiration: ${JWT_ACCESS_EXPIRATION:30m}` / `jwt.refresh.expiration: ${JWT_REFRESH_EXPIRATION:1d}` — Spring-native `Duration` strings (fixed the old ms/seconds mismatch; refresh typo `JWT_ACCESS_EXPIRATION` → `JWT_REFRESH_EXPIRATION` resolved) | ✅       |
+| Refresh response | `POST /api/auth/refresh` → new `RefreshTokenResponseDTO` (`email`, `accessToken`, `expiresIn`); refresh token is NOT rotated/revoked — stays valid until its 1d expiry or logout; new refresh token only via re-login | ✅       |
+| Swagger cleanup | `@ParameterObject` applied to all 5 bare-`Pageable` controllers; audit-logs keeps `@PageableDefault(sort = createdAt, DESC)` | ✅       |
+| Manual verification | login → `{ accessToken, refreshToken, expiresIn: 1800 }`; refresh → new access token, same refresh token stays valid; logout → refresh fails with "revoked"; Redis stores `refresh:token:*` / `refresh:user:*`; login/refresh/logout audited | ✅       |
 
 **Deliverable:** stateful logout + non-rotating refresh backed by Redis (refresh token stays
 valid until 1d expiry or logout; new refresh token issued only by re-login).
 
-## Day 3 — RabbitMQ export publisher (API side)
+## Day 3 — RabbitMQ export publisher (API side) ✅ DONE (code)
 
-| Task | Details |
-| ---- | ------- |
-| Dependency | `spring-boot-starter-amqp` in `pom.xml` |
-| Topology | `RabbitMQConfig`: direct exchange `progress.exchange`, queue `progress.report.export.q`
+Code is complete, builds green, and the app boots; the **live end-to-end verification is still
+pending** — RabbitMQ topology is only declared on first publish, and the export endpoint needs an
+ADMIN/teacher user + an enrolled class (blocked on demo seed data, see Manual verification).
+
+| Task         | Details                                                                                 |
+|--------------|-----------------------------------------------------------------------------------------|
+| Dependency   | `spring-boot-starter-amqp` in `pom.xml`                                                 |
+| Topology     | `RabbitMQConfig`: direct exchange `progress.exchange`, queue `progress.report.export.q` 
   (DLX args → `progress.exchange` / key `progress.report.export.dlq`), DLQ
-  `progress.report.export.dlq`, bindings, `Jackson2JsonMessageConverter` + `RabbitTemplate` |
+  `progress.report.export.dlq`, bindings, `JacksonJsonMessageConverter` (Jackson 3 —
+  `Jackson2JsonMessageConverter` is deprecated in Spring AMQP 4.0) + `RabbitTemplate`; explicit
+  `RabbitAdmin` bean (Boot 4 no longer auto-registers one) |
 | Message + publisher | `ProgressReportMessage` (`classId`, `recipientEmail`, `requestedAt`, `requesterName`);
   `ProgressReportPublisher.publish(...)` wrapped in `@CircuitBreaker(name = "rabbitmq-publish",
-  fallbackMethod = "publishFallback")` (fallback throws `BusinessException`) |
+  fallbackMethod = "publishFallback")`; fallback throws `ServiceUnavailableException` → 503
+  (deviation: the plan wording originally said `BusinessException`) |
 | Endpoint | `POST /api/class/{classId}/export` (ADMIN or teacher) → 202 "queued" + audit `action=export` on the class |
 | Resilience4j | `resilience4j.circuitbreaker` default config + `rabbitmq-publish` instance in `application.yaml` |
 | Infra | docker-compose: add `rabbitmq:3-management` (5672/15672) + env wiring |
-| Manual verification | RabbitMQ UI (15672): message lands in `progress.report.export.q`; stop RabbitMQ → API returns 503/fallback after circuit opens |
+| Manual verification | ⏳ **pending** — RabbitMQ UI (15672): message lands in `progress.report.export.q`; stop RabbitMQ → API returns 503/fallback after circuit opens |
 
 **Deliverable:** event-driven export request → durable queue message, resilient to broker outages.
+
+**Extras rolled into Day 3 (from code review):**
+- Fixed a Day-2 regression (`6cba4dd`): `SecurityConfig` permitted `POST /api/auth` but the login
+  route is `/api/auth/login` — login returned 401. Committed separately as
+  `fix(auth): permit POST /api/auth/login`.
 
 ## Day 4 — Consumer service documentation + Mailpit
 
