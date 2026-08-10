@@ -46,7 +46,7 @@ public class SecurityConfig {
                                 "/v3/api-docs.yaml",
                                 "/api/user/**")
                         .permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth", "/api/auth/refresh")
+                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/refresh")
                         .permitAll()
                         .anyRequest()
                         .authenticated())
