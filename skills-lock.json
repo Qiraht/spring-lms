@@ -1,0 +1,183 @@
+{
+  "version": 1,
+  "skills": {
+    "ai-observability": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/ai-observability/SKILL.md",
+      "computedHash": "1fe6d5ed8e06a1b6d9f9368fe26a6a9fb4ade6a0abf79cdc834b62ac3f4fdbf0"
+    },
+    "api-versioning": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/api-versioning/SKILL.md",
+      "computedHash": "eaba6ed49715c06491cd0c47167ea4bb69558024ee9fed491b09534137510fd1"
+    },
+    "code-reviewer": {
+      "source": "a-pavithraa/springboot-skills-marketplace",
+      "sourceType": "github",
+      "skillPath": "plugins/springboot-architecture/skills/code-reviewer/SKILL.md",
+      "computedHash": "80a728d04fd2da3c11a4f875fd02b0322e7d43c21bfce9651cc472fb65f9a86d"
+    },
+    "creating-springboot-projects": {
+      "source": "a-pavithraa/springboot-skills-marketplace",
+      "sourceType": "github",
+      "skillPath": "plugins/springboot-architecture/skills/creating-springboot-projects/SKILL.md",
+      "computedHash": "71d64c3601ffae4cda4684ff035569841f91ce6018875daf739e6ba3c76594ea"
+    },
+    "domain-driven-design": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/domain-driven-design/SKILL.md",
+      "computedHash": "1f6f3525016c41543b0cba35c5adc687492061efc6a05a89f3723a8edcb9395b"
+    },
+    "flyway-migrations": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/flyway-migrations/SKILL.md",
+      "computedHash": "b41ace5b269f0b55d845d93fb41dae5b34d7e5dec4eefdd6f98579274f7138e8"
+    },
+    "hateoas": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/hateoas/SKILL.md",
+      "computedHash": "4d3b81d050579b779c35e40eb713d459dfd9cebc3a28545d80b833ffd31b5498"
+    },
+    "hexagonal-architecture": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/hexagonal-architecture/SKILL.md",
+      "computedHash": "55899279d0dcf2c3266afbb88f28838e9c5a765c800b8a576f7c6bf23e2757cd"
+    },
+    "http-interface-clients": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/http-interface-clients/SKILL.md",
+      "computedHash": "db112bd0bd5f6af53a66bba37f209539698cc1f11f47e1b8c4cada0b6f239c1a"
+    },
+    "layered-architecture": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/layered-architecture/SKILL.md",
+      "computedHash": "cabf4c0d5eb5dd0eaafa417802340f7706c8ee844298dbb7338f8be8f3c899f2"
+    },
+    "mcp-server": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/mcp-server/SKILL.md",
+      "computedHash": "578065f3d37c0518cefa3840970c664444c44288633fb355e7bedd15a12b409d"
+    },
+    "multi-module-maven": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/multi-module-maven/SKILL.md",
+      "computedHash": "bab1433ffcf1f63c30a295ce2168693b63183a46b95b0df48183c7752623f5e9"
+    },
+    "null-safety": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/null-safety/SKILL.md",
+      "computedHash": "28798266cb86663221b5b2cb0a642d39b57446a02ba3d0cf055731168916c76a"
+    },
+    "oauth2-resource-server": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/oauth2-resource-server/SKILL.md",
+      "computedHash": "34b8b0e01c69fa86f3653238503402afdda1335cc73821ddb622d0445836a66b"
+    },
+    "openapi-first": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/openapi-first/SKILL.md",
+      "computedHash": "da8cdc59d0b98a4a34b8a710e557f9eaae16d55043e8afe5d1573b71b0d3ac3d"
+    },
+    "problem-details-rfc9457": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/problem-details-rfc9457/SKILL.md",
+      "computedHash": "d558622bd5eadf6db9766d5c814bcf7400facc1cbbe687b2314d99a0a76e2183"
+    },
+    "resilience-retry": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/resilience-retry/SKILL.md",
+      "computedHash": "8a9ea760f7c1607ae74274edc8ea951861d731e16054fd39e74d51160459611e"
+    },
+    "rest-api-conventions": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/rest-api-conventions/SKILL.md",
+      "computedHash": "641897d5efc9f3790ca6b5537b2c8368771655e2d5e2200d585815a2fe6abbff"
+    },
+    "spring-ai-integration": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/spring-ai-integration/SKILL.md",
+      "computedHash": "e9376461759784d96b0a87566064985c35c082bc7676019915a3b3163e0fa5f5"
+    },
+    "spring-batch": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/spring-batch/SKILL.md",
+      "computedHash": "18f62f99de30928de76e427cda58ce27760c49198a382d0ef315a4d45a9fdec2"
+    },
+    "spring-data-jpa": {
+      "source": "a-pavithraa/springboot-skills-marketplace",
+      "sourceType": "github",
+      "skillPath": "plugins/springboot-architecture/skills/spring-data-jpa/SKILL.md",
+      "computedHash": "6282f03e27fbc2874811651062a9c8aab92f1fa9b38c735ba92a02d56d92fe0b"
+    },
+    "spring-data-redis": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/spring-data-redis/SKILL.md",
+      "computedHash": "4e854a8eb9d15c7be9ef129d172babe1173b92b863bd29f76eb3403a355be100"
+    },
+    "spring-security-jwt": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/spring-security-jwt/SKILL.md",
+      "computedHash": "8e7605c15b9f2fd1e781cf5b630607466a052cb0fd6ba1f48c8b87d3363a2e3c"
+    },
+    "springboot-migration": {
+      "source": "a-pavithraa/springboot-skills-marketplace",
+      "sourceType": "github",
+      "skillPath": "plugins/springboot-architecture/skills/springboot-migration/SKILL.md",
+      "computedHash": "7f6d3fc45f2dbeba56e5c3a9fc5004e26e9942259fec3b027cd8cf96a0020a44"
+    },
+    "testing-pyramid": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/testing-pyramid/SKILL.md",
+      "computedHash": "2baab94628880ebf3ae067d5799a0bd5a462f59b6b34d57539ce1231d1313da8"
+    },
+    "transactional-patterns": {
+      "source": "rrezartprebreza/spring-boot-skills",
+      "ref": "main",
+      "sourceType": "github",
+      "skillPath": "skills/spring-boot-4/transactional-patterns/SKILL.md",
+      "computedHash": "b44b68fdb8dfd3c267a0d8e094d0d4187a0909667a57fcfaeb24aa41fe20a30b"
+    }
+  }
+}
