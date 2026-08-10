@@ -6,8 +6,8 @@ plus full documentation for a separate consumer microservice.
 
 ## Current Status
 
-> **Days 1–3 are complete (Day 3 code in; its live end-to-end verification is pending demo
-> seed data).** As of the end of Day 2 the following is in place:
+> **Days 1–3 are complete and verified end-to-end (with demo seed data).** As of the end of
+> Day 2 the following is in place:
 > - Spring Boot **4.1.0** / Spring Framework 7.0.8; `spring-boot-starter-aspectj`
 >   (note: `spring-boot-starter-aop` was **renamed** to `spring-boot-starter-aspectj` in Boot 4),
 >   plus `spring-data-redis`, `resilience4j`, `springdoc 3.0.2` deps (`d3f94ab`)
@@ -37,10 +37,10 @@ plus full documentation for a separate consumer microservice.
 >   expiration config as Spring-native `Duration` strings (`access` **30m**, `refresh` **1d**),
 >   non-rotating refresh (new access token only; refresh token valid until 1d expiry or logout),
 >   logout revokes all user refresh tokens in Redis, access-token-only filter guard
-> - **Day 3 (RabbitMQ export publisher)** code-complete: `spring-boot-starter-amqp`, `RabbitMQConfig`
->   (exchange/queue/DLQ + explicit `RabbitAdmin`), `ProgressReportPublisher` with
->   `@CircuitBreaker("rabbitmq-publish")`, `POST /api/class/{id}/export` → 202 + audited,
->   fallback → 503; e2e verification pending demo seed data (see Day 3 below)
+> - **Day 3 (RabbitMQ export publisher)** code-complete and verified end-to-end:
+>   `spring-boot-starter-amqp`, `RabbitMQConfig` (exchange/queue/DLQ + explicit `RabbitAdmin`),
+>   `ProgressReportPublisher` with `@CircuitBreaker("rabbitmq-publish")`,
+>   `POST /api/class/{id}/export` → 202 + audited, fallback → 503 (verified, see Day 3 below)
 > - **Still pending**: consumer microservice docs + Mailpit (Day 4), docker-compose polish,
 >   admin bootstrap + final docs (Day 5)
 
@@ -80,11 +80,11 @@ the original "rotation" wording below, confirmed with the user.
 **Deliverable:** stateful logout + non-rotating refresh backed by Redis (refresh token stays
 valid until 1d expiry or logout; new refresh token issued only by re-login).
 
-## Day 3 — RabbitMQ export publisher (API side) ✅ DONE (code)
+## Day 3 — RabbitMQ export publisher (API side) ✅ DONE (verified)
 
-Code is complete, builds green, and the app boots; the **live end-to-end verification is still
-pending** — RabbitMQ topology is only declared on first publish, and the export endpoint needs an
-ADMIN/teacher user + an enrolled class (blocked on demo seed data, see Manual verification).
+Code is complete, builds green, and the app boots. Verified end-to-end with demo seed data:
+the export endpoint returns **202** and the message lands in `progress.report.export.q`;
+stopping RabbitMQ opens the circuit and the API returns **503** (see Manual verification).
 
 | Task         | Details                                                                                 |
 |--------------|-----------------------------------------------------------------------------------------|
@@ -101,7 +101,7 @@ ADMIN/teacher user + an enrolled class (blocked on demo seed data, see Manual ve
 | Endpoint | `POST /api/class/{classId}/export` (ADMIN or teacher) → 202 "queued" + audit `action=export` on the class |
 | Resilience4j | `resilience4j.circuitbreaker` default config + `rabbitmq-publish` instance in `application.yaml` |
 | Infra | docker-compose: add `rabbitmq:3-management` (5672/15672) + env wiring |
-| Manual verification | ⏳ **pending** — RabbitMQ UI (15672): message lands in `progress.report.export.q`; stop RabbitMQ → API returns 503/fallback after circuit opens |
+| Manual verification | ✅ — `POST /api/class/{id}/export` → 202; payload `{classId, recipientEmail, requestedAt, requesterName}` lands in `progress.report.export.q` (UI 15672); `docker stop rabbitmq` → 5+ attempts @ 50% failure rate → 503 "Progress report export is temporarily unavailable" + app logs "Service unavailable"; recovers ~10s after `docker start rabbitmq` |
 
 **Deliverable:** event-driven export request → durable queue message, resilient to broker outages.
 
@@ -139,7 +139,7 @@ ADMIN/teacher user + an enrolled class (blocked on demo seed data, see Manual ve
 
 1. `docker compose up -d rabbitmq redis mailpit` — MySQL + Valkey already run as Docker containers (`mysql`, `valkey` on 6379)
 2. Start API against local MySQL (`mvn spring-boot:run`) — Liquibase applies pending changesets on startup
-3. Register a user → promote to ADMIN via SQL
+3. Demo data: `bun scripts/seed.ts` (docker-exec seed of 8 users / 2 classes / 8 enrollments / 6 materials / 4 assignments / 12 submissions / 30 progress rows; all users password `Passw0rd!`; credentials in `docs/demo-credentials.md`) — or manually register a user → promote to ADMIN via SQL
 4. Login → capture tokens → refresh (new access token only; refresh token stays valid) → logout (refresh token revoked)
 5. Create class → material → assignment → enroll students → submit → grade
 6. Query `/api/audit-logs` (ADMIN) and check the filter queries
@@ -149,7 +149,7 @@ ADMIN/teacher user + an enrolled class (blocked on demo seed data, see Manual ve
 
 - **Line endings (CRLF ↔ LF) — biggest gotcha.** Committed files are **CRLF** (edited on Windows/IntelliJ); edits from WSL produce **LF**. Git then treats an entire touched file as one collapsed diff hunk, which silently bundles unrelated changes into a commit (this is how Day-2 WIP ended up inside `583af66`). Before more feature work, do a one-time normalization (see [LF line-ending enforcement](#lf-line-ending-enforcement) below). Review `git diff -w` (ignore whitespace) to see *real* content changes.
 - **Uncommitted WIP is the norm, not the exception.** The working tree is intentionally dirty (Day-2 WIP, formatting, docs). Always stage only the files for the current task; double-check `git status` before committing. `docs/`, `RefreshTokenService`, and `RefreshTokenRequestDTO` are untracked — the first docs commit should include `docs/`.
-- **DB access (read-only for the assistant).** MySQL and Valkey run in Docker (`docker ps`: `mysql`, `valkey`, `portainer`). There is **no local `mysql` CLI in WSL** — query via `docker exec mysql mysql -u root -p<pass> lmsdb ...`. The assistant may only **read** the DB; all schema changes are applied through **Liquibase changesets** when the app starts.
+- **DB access.** MySQL and Valkey run in Docker (`docker ps`: `mysql`, `valkey`, `portainer`). There is **no local `mysql` CLI in WSL** — query via `docker exec mysql mysql -u root -p<pass> lmsdb ...`. Writes to MySQL happen only through the demo seed (`bun scripts/seed.ts`) or Liquibase changesets; the assistant should not hand-edit data ad hoc.
 - **UUIDs are stored as `BINARY(16)`.** DBeaver renders them as garbled bytes — use `SELECT BIN_TO_UUID(id) ...` to read them. Hibernate generates UUIDv4 client-side; the schema default `UUID_TO_BIN(UUID())` only affects raw SQL inserts, not app writes.
 - **Config footguns.** `jwt.*` expirations use Spring-native `Duration` strings (`access` `30m`, `refresh` `1d`) — always include a unit (a bare number means **ms**). The app runs on **8080**; `.env`'s `APP_PORT=8081` is not auto-loaded by Spring (no dotenv dependency) — it only matters when wiring Docker Compose.
 - **Swagger + `Pageable`.** A bare `Pageable` controller param renders as a required collapsed object in Swagger. Use `@ParameterObject` (flattens to optional `page`/`size`/`sort`) + `@PageableDefault` for per-endpoint defaults. Audit-logs is fixed; 4 other controllers still use bare `Pageable`.
