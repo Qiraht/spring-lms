@@ -41,8 +41,12 @@ plus full documentation for a separate consumer microservice.
 >   `spring-boot-starter-amqp`, `RabbitMQConfig` (exchange/queue/DLQ + explicit `RabbitAdmin`),
 >   `ProgressReportPublisher` with `@CircuitBreaker("rabbitmq-publish")`,
 >   `POST /api/class/{id}/export` → 202 + audited, fallback → 503 (verified, see Day 3 below)
-> - **Still pending**: consumer microservice docs + Mailpit (Day 4), docker-compose polish,
->   admin bootstrap + final docs (Day 5)
+> - **Day 4 (consumer microservice)** complete: the separate `spring-lms-consumer` app was
+>   fully implemented and containerized (Dockerfile + single `docker-compose.yaml` with
+>   consumer + `rabbitmq-lms` + `mailpit-lms`), Mailpit configured with SMTP auth
+>   `admin`/`admin`, and the full flow verified end-to-end (API → RabbitMQ → consumer →
+>   summary/detail CSV → Mailpit; acks vs reject→DLQ). See Day 4 below.
+> - **Still pending**: docker-compose polish, admin bootstrap + final docs (Day 5)
 
 ---
 
@@ -110,16 +114,30 @@ stopping RabbitMQ opens the circuit and the API returns **503** (see Manual veri
   route is `/api/auth/login` — login returned 401. Committed separately as
   `fix(auth): permit POST /api/auth/login`.
 
-## Day 4 — Consumer service documentation + Mailpit
+## Day 4 — Consumer service documentation + Mailpit ✅ DONE (verified)
 
-| Task | Details |
-| ---- | ------- |
-| Consumer spec | Write `docs/consumer-service.md` (full standalone build spec — see below) |
-| Mailpit | docker-compose: add `mailpit` (SMTP 1025 / UI 8025); document `SMTP_*` env for the consumer |
-| End-to-end wiring notes | Document the complete flow: API publish → RabbitMQ → consumer → summary + detail CSV → Mailpit; ack vs reject→DLQ |
-| Manual verification | Full local stack (API + RabbitMQ + Redis + Mailpit) running; publish a message; confirm it's consumable and the payload round-trips as JSON |
+The consumer was not only specified but **implemented and verified end-to-end**. Build detail
+(the task-by-task spec) lives in `docs/consumer-service.md` in the consumer repo.
 
-**Deliverable:** the consumer is fully specified and the local broker stack is demoable.
+| Task | Details | Status |
+| ---- | ------- | ------ |
+| Consumer spec | Write `docs/consumer-service.md` (full standalone build spec — see below) | ✅ spec written, then turned into a working app |
+| Consumer implementation | Domain layer, repositories, messaging/topology, report builder, CSV, mail, listener + resilience circuit breaker — all 9 tasks done (`9c473be`…`20d62db`) | ✅ done + built (jar green) |
+| Mailpit | docker-compose: add `mailpit` (SMTP 1025 / UI 8025); document `SMTP_*` env for the consumer | ✅ SMTP auth `admin`/`admin`, plaintext; `SMTP_AUTH=true` required |
+| Containerization | `Dockerfile` (two-stage Maven→Temurin-21) + single `docker-compose.yaml` (consumer + `rabbitmq-lms` + `mailpit-lms`) | ✅ verified with `docker compose up` (feature/container `20d62db`) |
+| End-to-end wiring notes | Document the complete flow: API publish → RabbitMQ → consumer → summary + detail CSV → Mailpit; ack vs reject→DLQ | ✅ verified live; strategy-B type-mapper round-trip + DB queries + email delivery all confirmed |
+| Manual verification | Full local stack (API + RabbitMQ + Mailpit) running; publish a message; confirm it's consumable and the payload round-trips as JSON | ✅ message drained, email with both CSVs in Mailpit, failure → DLQ |
+
+**Deliverable:** the consumer is fully implemented, specified, and the local broker stack is demoable.
+
+**Notes / caveats:**
+- **SMTP auth:** Mailpit enforces `admin`/`admin` + plaintext (`MP_SMTP_AUTH_ALLOW_INSECURE`); the
+  consumer's `spring.mail.smtp.auth` must be `SMTP_AUTH=true` or mailing fails → DLQ.
+- **Broker ownership:** this compose stack defines its own RabbitMQ + Mailpit; the API repo's
+  compose also declares RabbitMQ on the same ports, so both stacks can't be up at once (container
+  names were suffixed `-lms` to reduce collision).
+- **Producer needs no change:** `ClassesService.exportProgress` already falls back to the current
+  user's email; see the caveat added to "Caveats for future development".
 
 ## Day 5 — Docs, admin bootstrap, polish
 
@@ -139,7 +157,7 @@ stopping RabbitMQ opens the circuit and the API returns **503** (see Manual veri
 
 1. `docker compose up -d rabbitmq redis mailpit` — MySQL + Valkey already run as Docker containers (`mysql`, `valkey` on 6379)
 2. Start API against local MySQL (`mvn spring-boot:run`) — Liquibase applies pending changesets on startup
-3. Demo data: `bun scripts/seed.ts` (docker-exec seed of 8 users / 2 classes / 8 enrollments / 6 materials / 4 assignments / 12 submissions / 30 progress rows; all users password `Passw0rd!`; credentials in `docs/demo-credentials.md`) — or manually register a user → promote to ADMIN via SQL
+3. Demo data: `bun scripts/seed.ts` (docker-exec seed of 17 users / 6 classes / 30 enrollments / 26 materials / 16 assignments / 12 submissions / 30 progress rows; all users password `Passw0rd!`; credentials in `docs/demo-credentials.md`) — or manually register a user → promote to ADMIN via SQL
 4. Login → capture tokens → refresh (new access token only; refresh token stays valid) → logout (refresh token revoked)
 5. Create class → material → assignment → enroll students → submit → grade
 6. Query `/api/audit-logs` (ADMIN) and check the filter queries
@@ -157,6 +175,7 @@ stopping RabbitMQ opens the circuit and the API returns **503** (see Manual veri
 - **Changelog registration is easy to miss.** `create_audit_logs_table.sql` was added but never registered in `db.changelog-master.yaml` (fixed in `87f25fe`). Always append new scripts to the master changelog, or a fresh DB silently lacks the table.
 - **Login security.** Unknown email and wrong password both return 401 — deliberate anti-enumeration. Don't "fix" it back to a 404.
 - **JWT placeholders.** The `@Value` keys are `jwt.access.expiration` / `jwt.refresh.expiration` (dotted), matching `application.yaml`. The filter guard accepts **access** tokens only (`validateAccessToken`); refresh tokens (signed with `refreshSecret`) must not be used as bearer credentials.
+- **Export recipientEmail — no producer change required.** `ClassesService.exportProgress` (since `7d298ff`) already falls back to the **current user's email** when the request body's `recipientEmail` is null/blank. Verified end-to-end against the consumer: omit `recipientEmail` (or pass the Swagger `"string"` placeholder) and the consumer still delivers to `currentUser.getEmail()`. Optional hardening on the producer: add `@NotBlank @Email` to `ExportRequestDTO.recipientEmail` so a placeholder is rejected with 400 instead of reaching SMTP (currently a bad literal address like `"string"` flows all the way to the SMTP 553 → consumer DLQ).
 
 ## LF line-ending enforcement (deferred)
 
