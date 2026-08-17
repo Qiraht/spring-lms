@@ -25,10 +25,10 @@ spring:
 ## JWT Secret key & Expiration
 jwt:
   access:
-    secret: ${JWT_ACCESS_SECRET:v6yB8p98p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p9zB6X5y8p}
+    secret: ${JWT_ACCESS_SECRET}
     expiration: ${JWT_ACCESS_EXPIRATION:30m}
   refresh:
-    secret: ${JWT_REFRESH_SECRET:89acecc6f3451cb0a09437fc377fa868a85697b40f0bf5858311c083a2209bd6}
+    secret: ${JWT_REFRESH_SECRET}
     expiration: ${JWT_REFRESH_EXPIRATION:1d}
 
 
