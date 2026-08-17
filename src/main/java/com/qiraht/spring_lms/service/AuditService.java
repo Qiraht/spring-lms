@@ -17,7 +17,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
@@ -30,7 +29,7 @@ public class AuditService {
     @PersistenceContext
     private EntityManager entityManager;
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional
     public void record(
             UUID userId,
             String entityType,
