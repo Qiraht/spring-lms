@@ -48,9 +48,17 @@ public class MaterialController {
             "hasRole('ADMIN') or @enrollmentService.isEnrolledInMaterial(authentication.principal.userId, #materialId)")
     public ResponseEntity<ApiResponse<MaterialResponseDTO>> getMaterial(@PathVariable String materialId) {
         MaterialResponseDTO data = materialService.getMaterialById(materialId);
-        progressService.markMaterialAsCompleted(materialId);
 
         return ResponseEntity.ok(ApiResponse.success(200, "success", data));
+    }
+
+    @PostMapping("/{materialId}/complete")
+    @PreAuthorize(
+            "hasRole('ADMIN') or @enrollmentService.isEnrolledInMaterial(authentication.principal.userId, #materialId)")
+    public ResponseEntity<ApiResponse<Void>> completeMaterial(@PathVariable String materialId) {
+        progressService.markMaterialAsCompleted(materialId);
+
+        return ResponseEntity.ok(ApiResponse.success(200, "success", null));
     }
 
     @PutMapping("/{materialId}")
