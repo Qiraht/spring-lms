@@ -23,7 +23,7 @@ public class SubmissionController {
 
     @PostMapping
     @PreAuthorize(
-            "hasRole('ADMIN') or @enrollmentService.isEnrolledInClass(authentication.principal.userId, @assignmentRepository.findById(#assignmentId).get().classes.id)")
+            "hasRole('ADMIN') or @enrollmentService.isEnrolledInAssignment(authentication.principal.userId, #assignmentId)")
     public ResponseEntity<ApiResponse<SubmissionResponseDTO>> submitAssignment(
             @PathVariable String assignmentId, @RequestBody SubmissionRequestDTO request) {
 

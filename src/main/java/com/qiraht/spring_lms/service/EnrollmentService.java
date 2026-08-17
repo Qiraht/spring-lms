@@ -46,6 +46,20 @@ public class EnrollmentService {
         return isTeacherOfClass(userId, assignment.getClasses().getId().toString());
     }
 
+    public boolean isEnrolledInMaterial(UUID userId, String materialId) {
+        Material material = materialRepository
+                .findById(UUID.fromString(materialId))
+                .orElseThrow(() -> new NotFoundException("Material not found"));
+        return isEnrolledInClass(userId, material.getClasses().getId().toString());
+    }
+
+    public boolean isEnrolledInAssignment(UUID userId, String assignmentId) {
+        Assignment assignment = assignmentRepository
+                .findById(UUID.fromString(assignmentId))
+                .orElseThrow(() -> new NotFoundException("Assignment not found"));
+        return isEnrolledInClass(userId, assignment.getClasses().getId().toString());
+    }
+
     public boolean isStudentOfClass(UUID userId, String classId) {
         return enrollmentRepository.existsByClassesIdAndUserIdAndRole(
                 UUID.fromString(classId), userId, ClassRole.STUDENT);

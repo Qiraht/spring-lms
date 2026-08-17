@@ -1,16 +1,23 @@
 package com.qiraht.spring_lms.service;
 
+import static java.util.stream.Collectors.toMap;
+
 import com.qiraht.spring_lms.dto.response.AuthorDTO;
 import com.qiraht.spring_lms.dto.response.StudentClassSummaryDTO;
+import com.qiraht.spring_lms.entity.Enrollment;
 import com.qiraht.spring_lms.entity.Material;
 import com.qiraht.spring_lms.entity.StudentProgress;
 import com.qiraht.spring_lms.entity.User;
 import com.qiraht.spring_lms.exception.AuthorizationException;
 import com.qiraht.spring_lms.exception.NotFoundException;
 import com.qiraht.spring_lms.repository.*;
+import com.qiraht.spring_lms.repository.AssignmentSubmissionRepository.SubmissionAvgView;
+import com.qiraht.spring_lms.repository.AssignmentSubmissionRepository.SubmissionCountView;
+import com.qiraht.spring_lms.repository.StudentProgressRepository.MaterialCompletionView;
 import com.qiraht.spring_lms.security.CustomUsersDetails;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -127,10 +134,54 @@ public class ProgressService {
 
         classesRepository.findById(classUuid).orElseThrow(() -> new NotFoundException("Class not found"));
 
-        Page<com.qiraht.spring_lms.entity.Enrollment> enrollments = enrollmentRepository.findByClassesIdAndRole(
+        int totalMaterials = (int) materialRepository.countByClassesId(classUuid);
+        int totalAssignments = (int) assignmentRepository.countByClassesId(classUuid);
+
+        Map<UUID, Long> completedMaterialsByUser =
+                progressRepository.countCompletedMaterialsForClass(classUuid).stream()
+                        .collect(toMap(MaterialCompletionView::getUserId, MaterialCompletionView::getCompleted));
+        Map<UUID, Long> submittedByUser = submissionRepository.countSubmissionsForClass(classUuid).stream()
+                .collect(toMap(SubmissionCountView::getUserId, SubmissionCountView::getCount));
+        Map<UUID, Double> avgScoreByUser = submissionRepository.avgScoresForClass(classUuid).stream()
+                .collect(toMap(SubmissionAvgView::getUserId, SubmissionAvgView::getAvgScore));
+
+        Page<Enrollment> enrollments = enrollmentRepository.findByClassesIdAndRole(
                 classUuid, com.qiraht.spring_lms.Enum.ClassRole.STUDENT, pageable);
 
-        return enrollments.map(enrollment ->
-                getStudentClassSummary(classId, enrollment.getUser().getId()));
+        return enrollments.map(enrollment -> {
+            User student = enrollment.getUser();
+            UUID studentId = student.getId();
+
+            int completedMaterials =
+                    completedMaterialsByUser.getOrDefault(studentId, 0L).intValue();
+            int submittedAssignments =
+                    submittedByUser.getOrDefault(studentId, 0L).intValue();
+            Double avg = avgScoreByUser.get(studentId);
+            BigDecimal averageScore =
+                    avg != null ? BigDecimal.valueOf(avg).setScale(2, RoundingMode.HALF_UP) : BigDecimal.ZERO;
+
+            int totalTrackableItems = totalMaterials + totalAssignments;
+            int totalCompletedItems = completedMaterials + submittedAssignments;
+
+            Double completionPercentage = 0.0;
+            if (totalTrackableItems > 0) {
+                completionPercentage = ((double) totalCompletedItems / totalTrackableItems) * 100.0;
+            }
+
+            return StudentClassSummaryDTO.builder()
+                    .classId(classId)
+                    .student(AuthorDTO.builder()
+                            .id(student.getId())
+                            .firstName(student.getFirstName())
+                            .lastName(student.getLastName())
+                            .build())
+                    .totalMaterials(totalMaterials)
+                    .completedMaterials(completedMaterials)
+                    .totalAssignments(totalAssignments)
+                    .submittedAssignments(submittedAssignments)
+                    .averageScore(averageScore)
+                    .completionPercentage(completionPercentage)
+                    .build();
+        });
     }
 }

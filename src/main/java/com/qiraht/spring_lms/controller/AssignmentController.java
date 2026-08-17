@@ -34,7 +34,7 @@ public class AssignmentController {
 
     @GetMapping("/{assignmentId}")
     @PreAuthorize(
-            "hasRole('ADMIN') or @enrollmentService.isEnrolledInClass(authentication.principal.userId, @assignmentRepository.findById(#assignmentId).get().classes.id)")
+            "hasRole('ADMIN') or @enrollmentService.isEnrolledInAssignment(authentication.principal.userId, #assignmentId)")
     public ResponseEntity<ApiResponse<AssignmentResponseDTO>> getAssignmentById(@PathVariable String assignmentId) {
         AssignmentResponseDTO data = assignmentService.getAssignmentById(assignmentId);
 

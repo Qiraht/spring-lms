@@ -1,6 +1,7 @@
 package com.qiraht.spring_lms.repository;
 
 import com.qiraht.spring_lms.entity.StudentProgress;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -19,4 +20,19 @@ public interface StudentProgressRepository extends JpaRepository<StudentProgress
     @Query(
             "SELECT COUNT(p) FROM StudentProgress p WHERE p.user.id = :userId AND p.assignment.classes.id = :classId AND p.isCompleted = true")
     long countCompletedAssignmentsByUserIdAndClassId(@Param("userId") UUID userId, @Param("classId") UUID classId);
+
+    @Query(
+            """
+            SELECT p.user.id AS userId, COUNT(p) AS completed
+            FROM StudentProgress p
+            WHERE p.material.classes.id = :classId AND p.isCompleted = true
+            GROUP BY p.user.id
+            """)
+    List<MaterialCompletionView> countCompletedMaterialsForClass(@Param("classId") UUID classId);
+
+    interface MaterialCompletionView {
+        UUID getUserId();
+
+        Long getCompleted();
+    }
 }

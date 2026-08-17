@@ -45,7 +45,7 @@ public class MaterialController {
 
     @GetMapping("/{materialId}")
     @PreAuthorize(
-            "hasRole('ADMIN') or @enrollmentService.isEnrolledInClass(authentication.principal.userId, @materialRepository.findById(#materialId).get().classes.id)")
+            "hasRole('ADMIN') or @enrollmentService.isEnrolledInMaterial(authentication.principal.userId, #materialId)")
     public ResponseEntity<ApiResponse<MaterialResponseDTO>> getMaterial(@PathVariable String materialId) {
         MaterialResponseDTO data = materialService.getMaterialById(materialId);
         progressService.markMaterialAsCompleted(materialId);
