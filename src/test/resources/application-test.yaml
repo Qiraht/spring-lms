@@ -1,0 +1,30 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: none
+    open-in-view: false
+  liquibase:
+    enabled: true
+    default-schema: lmsdb
+
+jwt:
+  access:
+    secret: ${JWT_ACCESS_SECRET:test-access-secret-needs-at-least-32-bytes-long-123456}
+    expiration: 30m
+  refresh:
+    secret: ${JWT_REFRESH_SECRET:test-refresh-secret-needs-at-least-32-bytes-long-123456}
+    expiration: 1d
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+resilience4j:
+  ratelimiter:
+    configs:
+      default:
+        limit-for-period: 3
+        limit-refresh-period: 60s
+        timeout-duration: 1500ms
