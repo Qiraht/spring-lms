@@ -7,6 +7,7 @@ import com.qiraht.spring_lms.dto.response.LoginResponseDTO;
 import com.qiraht.spring_lms.dto.response.RefreshTokenResponseDTO;
 import com.qiraht.spring_lms.security.CustomUsersDetails;
 import com.qiraht.spring_lms.service.AuthService;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
@@ -31,6 +32,7 @@ public class AuthController {
     @Operation(
             summary = "Post Auth User",
             description = "Authenticate user and return JWT access + refresh token. Public API")
+    @RateLimiter(name = "default", fallbackMethod = "loginFallback")
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<Object>> postLogin(@RequestBody LoginRequestDTO request) {
         LoginResponseDTO data = authService.LoginUser(request);
@@ -43,10 +45,20 @@ public class AuthController {
                         .build());
     }
 
+    private ResponseEntity<ApiResponse<Object>> loginFallback(LoginRequestDTO request, Throwable t) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(ApiResponse.builder()
+                        .status(HttpStatus.TOO_MANY_REQUESTS.value())
+                        .message("Too many requests, please try again later")
+                        .data(null)
+                        .build());
+    }
+
     @Tag(name = "Auth")
     @Operation(
             summary = "Refresh Token",
             description = "Exchange a valid refresh token for a new access token. Public API")
+    @RateLimiter(name = "default", fallbackMethod = "refreshFallback")
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<Object>> postRefresh(@RequestBody RefreshTokenRequestDTO request) {
         RefreshTokenResponseDTO data = authService.RefreshToken(request.getRefreshToken());
@@ -56,6 +68,15 @@ public class AuthController {
                         .status(HttpStatus.OK.value())
                         .message("Token refreshed")
                         .data(data)
+                        .build());
+    }
+
+    private ResponseEntity<ApiResponse<Object>> refreshFallback(RefreshTokenRequestDTO request, Throwable t) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .body(ApiResponse.builder()
+                        .status(HttpStatus.TOO_MANY_REQUESTS.value())
+                        .message("Too many requests, please try again later")
+                        .data(null)
                         .build());
     }
 
