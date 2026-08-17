@@ -21,6 +21,9 @@ spring:
     change-log: classpath:/db/changelog/db.changelog-master.yaml
     default-schema: lmsdb
 
+  jpa:
+    open-in-view: false
+
 
 ## JWT Secret key & Expiration
 jwt:
