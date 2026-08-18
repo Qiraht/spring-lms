@@ -1,5 +1,6 @@
 package com.qiraht.spring_lms.config;
 
+import com.qiraht.spring_lms.entity.User;
 import com.qiraht.spring_lms.security.CustomUsersDetails;
 import com.qiraht.spring_lms.service.UserDetailsServiceImpl;
 import com.qiraht.spring_lms.util.JwtUtil;
@@ -38,7 +39,7 @@ public class JwTAuthFilter extends OncePerRequestFilter {
                 authenticateUser(token, request);
             }
         } catch (Exception e) {
-            log.error("Authentication error: {}", e.getMessage());
+            log.error("Authentication error", e);
         }
 
         filterChain.doFilter(request, response);
@@ -58,7 +59,15 @@ public class JwTAuthFilter extends OncePerRequestFilter {
         UUID userId = jwtUtil.extractUserId(token);
         String role = jwtUtil.extractRole(token);
 
-        // Build CustomUsersDetails dari claims (no DB query!)
+        // Validate the user is still active (per-request DB check). A deleted/disabled
+        // user must lose access immediately even if their token has not expired.
+        User user = userDetailsService.getUserByEmail(email);
+        if (user.getDeletedAt() != null) {
+            log.warn("Rejecting token for inactive user: {}", email);
+            return;
+        }
+
+        // Build CustomUsersDetails dari claims
         CustomUsersDetails userDetails = CustomUsersDetails.builder()
                 .userId(userId)
                 .email(email)
