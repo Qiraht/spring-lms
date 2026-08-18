@@ -1,8 +1,9 @@
 spring:
-  port: ${PORT:8080}
   config:
     activate:
       on-profile: dev
+server:
+  port: ${PORT:8080}
   application:
     name: spring-lms
 
