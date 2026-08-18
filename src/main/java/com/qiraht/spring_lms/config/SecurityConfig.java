@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -30,6 +32,7 @@ public class SecurityConfig {
     private final JwTAuthFilter jwtAuthFilter;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final UnAuthenticationHandler unAuthenticationHandler;
+    private final Environment env;
 
     @Value("#{'${app.cors.allowed-origins:${CORS_ALLOWED_ORIGINS:http://localhost:5173}}'.split(',')}")
     private List<String> allowedOrigins;
@@ -41,19 +44,22 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        boolean docsEnabled = env.acceptsProfiles(Profiles.of("dev", "test"));
         http.cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
-                .authorizeHttpRequests(auth -> auth.requestMatchers(
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**",
-                                "/v3/api-docs.yaml",
-                                "/api/user/**")
-                        .permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/refresh")
-                        .permitAll()
-                        .anyRequest()
-                        .authenticated())
+                .authorizeHttpRequests(auth -> {
+                    if (docsEnabled) {
+                        auth.requestMatchers(
+                                        "/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/v3/api-docs.yaml")
+                                .permitAll();
+                    }
+                    auth.requestMatchers("/api/user/**")
+                            .permitAll()
+                            .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/refresh")
+                            .permitAll()
+                            .anyRequest()
+                            .authenticated();
+                })
                 .exceptionHandling(exception -> exception
                         .accessDeniedHandler(customAccessDeniedHandler)
                         .authenticationEntryPoint(unAuthenticationHandler))
