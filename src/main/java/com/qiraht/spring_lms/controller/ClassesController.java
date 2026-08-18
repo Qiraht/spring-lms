@@ -4,7 +4,6 @@ import com.qiraht.spring_lms.dto.ApiResponse;
 import com.qiraht.spring_lms.dto.request.ClassRequestDTO;
 import com.qiraht.spring_lms.dto.request.ExportRequestDTO;
 import com.qiraht.spring_lms.dto.response.ClassResponseDTO;
-import com.qiraht.spring_lms.entity.Classes;
 import com.qiraht.spring_lms.service.ClassesService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -66,7 +65,7 @@ public class ClassesController {
                     "Edit Class details. Authentication Needed and Resource Authorization role 'TEACHER' (User role 'ADMIN' can bypass this)")
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or @enrollmentService.isTeacherOfClass(authentication.principal.userId, #id)")
-    public ResponseEntity<ApiResponse<Classes>> putClass(
+    public ResponseEntity<ApiResponse<Void>> putClass(
             @PathVariable("id") String id, @RequestBody ClassRequestDTO request) {
         classesService.updateClass(id, request);
 
