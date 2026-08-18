@@ -5,6 +5,7 @@ import com.qiraht.spring_lms.dto.request.GradeRequestDTO;
 import com.qiraht.spring_lms.dto.request.SubmissionRequestDTO;
 import com.qiraht.spring_lms.dto.response.SubmissionResponseDTO;
 import com.qiraht.spring_lms.service.SubmissionService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -25,7 +26,7 @@ public class SubmissionController {
     @PreAuthorize(
             "hasRole('ADMIN') or @enrollmentService.isEnrolledInAssignment(authentication.principal.userId, #assignmentId)")
     public ResponseEntity<ApiResponse<SubmissionResponseDTO>> submitAssignment(
-            @PathVariable String assignmentId, @RequestBody SubmissionRequestDTO request) {
+            @PathVariable String assignmentId, @Valid @RequestBody SubmissionRequestDTO request) {
 
         SubmissionResponseDTO data = submissionService.submitAssignment(assignmentId, request);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -57,7 +58,7 @@ public class SubmissionController {
     public ResponseEntity<ApiResponse<SubmissionResponseDTO>> gradeSubmission(
             @PathVariable String assignmentId,
             @PathVariable String submissionId,
-            @RequestBody GradeRequestDTO request) {
+            @Valid @RequestBody GradeRequestDTO request) {
 
         SubmissionResponseDTO data = submissionService.gradeSubmission(submissionId, request);
         return ResponseEntity.ok(ApiResponse.success(HttpStatus.OK.value(), "Graded successfully", data));
