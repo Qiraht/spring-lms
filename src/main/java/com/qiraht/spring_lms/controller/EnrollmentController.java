@@ -5,6 +5,7 @@ import com.qiraht.spring_lms.dto.request.EnrollRequestDTO;
 import com.qiraht.spring_lms.service.EnrollmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class EnrollmentController {
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Void>> enrollUsers(
-            @PathVariable String classId, @RequestBody List<EnrollRequestDTO> requests) {
+            @PathVariable String classId, @RequestBody @Valid List<EnrollRequestDTO> requests) {
 
         enrollmentService.enrollUsers(classId, requests);
 
