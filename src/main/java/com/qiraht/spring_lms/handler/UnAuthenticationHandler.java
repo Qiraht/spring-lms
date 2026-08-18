@@ -1,6 +1,5 @@
 package com.qiraht.spring_lms.handler;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qiraht.spring_lms.dto.ApiResponse;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,9 +8,16 @@ import java.io.IOException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 public class UnAuthenticationHandler implements AuthenticationEntryPoint {
+    private final ObjectMapper objectMapper;
+
+    public UnAuthenticationHandler(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
     @Override
     public void commence(
             HttpServletRequest request,
@@ -23,6 +29,6 @@ public class UnAuthenticationHandler implements AuthenticationEntryPoint {
 
         ApiResponse<?> body = ApiResponse.error(HttpStatus.UNAUTHORIZED.value(), authException.getMessage(), null);
 
-        response.getWriter().write(new ObjectMapper().writeValueAsString(body));
+        response.getWriter().write(objectMapper.writeValueAsString(body));
     }
 }
