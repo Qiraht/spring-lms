@@ -9,44 +9,58 @@ plus full documentation for a separate consumer microservice.
 > **Days 1–3 are complete and verified end-to-end (with demo seed data).** As of the end of
 > Day 2 the following is in place:
 > - Spring Boot **4.1.0** / Spring Framework 7.0.8; `spring-boot-starter-aspectj`
->   (note: `spring-boot-starter-aop` was **renamed** to `spring-boot-starter-aspectj` in Boot 4),
->   plus `spring-data-redis`, `resilience4j`, `springdoc 3.0.2` deps (`d3f94ab`)
+    >   (note: `spring-boot-starter-aop` was **renamed** to `spring-boot-starter-aspectj` in Boot 4),
+    >   plus `spring-data-redis`, `resilience4j`, `springdoc 3.0.2` deps (`d3f94ab`)
 > - Audit foundation: `AuditLog` entity + repo, `AuditService` (REQUIRES_NEW persistence,
->   scalar-only reflection snapshot, filterable search), `@Auditable` annotation + `AuditAspect`,
->   `AuditLogResponseDTO` + `AuditLogController` (`GET /api/audit-logs` filters + pageable,
->   `GET /api/audit-logs/{id}`), ADMIN only — `5547e68`, `4d953ea`
+    >   scalar-only reflection snapshot, filterable search), `@Auditable` annotation + `AuditAspect`,
+    >   `AuditLogResponseDTO` + `AuditLogController` (`GET /api/audit-logs` filters + pageable,
+    >   `GET /api/audit-logs/{id}`), ADMIN only — `5547e68`, `4d953ea`
 > - Audit aspect resilience: `safeRecord(...)` helper so a failed audit write never masks the
->   original exception (both success + failure paths) — `4d953ea`
+    >   original exception (both success + failure paths) — `4d953ea`
 > - Swagger: audit-logs `Pageable` rendered as optional `page`/`size`/`sort` via `@ParameterObject`
 >   + `@PageableDefault(sort = "createdAt", direction = DESC)` — newest-first default;
->   `@ParameterObject` applied to the other 4 bare-`Pageable` controllers
+      >   `@ParameterObject` applied to the other 4 bare-`Pageable` controllers
 > - **DB indexes** changeset (`add_indexes.sql`): `users.email` → `VARCHAR(255)` + UNIQUE,
->   `class_enrollments(class_id, user_id, role)`, `assignment_submissions(assignment_id, user_id)`,
->   `audit_logs(created_at)` — `87f25fe`
+    >   `class_enrollments(class_id, user_id, role)`, `assignment_submissions(assignment_id, user_id)`,
+    >   `audit_logs(created_at)` — `87f25fe`
 > - **Exception handling** overhaul: `ConflictException` (409), missing Spring/Jackson handlers
->   (type mismatch, constraint violation, unreadable body, missing param → 400; method → 405;
->   data integrity → 409), per-field bean-validation errors, generic 500 message (no internals
->   leaked), 4xx logged as `warn` / 5xx as `error`, `UnAuthenticationHandler` 401-code fix —
->   `9f17012`
+    >   (type mismatch, constraint violation, unreadable body, missing param → 400; method → 405;
+    >   data integrity → 409), per-field bean-validation errors, generic 500 message (no internals
+    >   leaked), 4xx logged as `warn` / 5xx as `error`, `UnAuthenticationHandler` 401-code fix —
+    >   `9f17012`
 > - **Service exception cleanup**: `RuntimeException` → proper exceptions (MaterialService,
->   UserService, ProgressService, AuthService); login returns 401 for both unknown email and
->   wrong password (anti-enumeration) — `583af66`
+    >   UserService, ProgressService, AuthService); login returns 401 for both unknown email and
+    >   wrong password (anti-enumeration) — `583af66`
 > - **Day 2 auth hardening** (uncommitted WIP, `JwtUtil`/`AuthService`/`RefreshTokenService`/
->   `AuthController`/`JwTAuthFilter`/`SecurityConfig` + new `RefreshTokenResponseDTO`):
->   distinct `accessSecret`/`refreshSecret` (refresh tokens signed + validated with `refreshSecret`),
->   expiration config as Spring-native `Duration` strings (`access` **30m**, `refresh` **1d**),
->   non-rotating refresh (new access token only; refresh token valid until 1d expiry or logout),
->   logout revokes all user refresh tokens in Redis, access-token-only filter guard
+    >   `AuthController`/`JwTAuthFilter`/`SecurityConfig` + new `RefreshTokenResponseDTO`):
+    >   distinct `accessSecret`/`refreshSecret` (refresh tokens signed + validated with `refreshSecret`),
+    >   expiration config as Spring-native `Duration` strings (`access` **30m**, `refresh` **1d**),
+    >   non-rotating refresh (new access token only; refresh token valid until 1d expiry or logout),
+    >   logout revokes all user refresh tokens in Redis, access-token-only filter guard
 > - **Day 3 (RabbitMQ export publisher)** code-complete and verified end-to-end:
->   `spring-boot-starter-amqp`, `RabbitMQConfig` (exchange/queue/DLQ + explicit `RabbitAdmin`),
->   `ProgressReportPublisher` with `@CircuitBreaker("rabbitmq-publish")`,
->   `POST /api/class/{id}/export` → 202 + audited, fallback → 503 (verified, see Day 3 below)
+    >   `spring-boot-starter-amqp`, `RabbitMQConfig` (exchange/queue/DLQ + explicit `RabbitAdmin`),
+    >   `ProgressReportPublisher` with `@CircuitBreaker("rabbitmq-publish")`,
+    >   `POST /api/class/{id}/export` → 202 + audited, fallback → 503 (verified, see Day 3 below)
 > - **Day 4 (consumer microservice)** complete: the separate `spring-lms-consumer` app was
->   fully implemented and containerized (Dockerfile + single `docker-compose.yaml` with
->   consumer + `rabbitmq-lms` + `mailpit-lms`), Mailpit configured with SMTP auth
->   `admin`/`admin`, and the full flow verified end-to-end (API → RabbitMQ → consumer →
->   summary/detail CSV → Mailpit; acks vs reject→DLQ). See Day 4 below.
+    >   fully implemented and containerized (Dockerfile + single `docker-compose.yaml` with
+    >   consumer + `rabbitmq-lms` + `mailpit-lms`), Mailpit configured with SMTP auth
+    >   `admin`/`admin`, and the full flow verified end-to-end (API → RabbitMQ → consumer →
+    >   summary/detail CSV → Mailpit; acks vs reject→DLQ). See Day 4 below.
+> - **Consumer hardening pass** complete: after the original build, `spring-lms-consumer`
+    >   received a code-review hardening pass — soft-delete filtering, CSV formula-injection
+    >   escaping, recipient-email validation, circuit-breaker/DLQ rework, N+1 query batching,
+    >   observability (actuator + DLQ depth gauge), Docker non-root, and the deferred items
+    >   (`Enum`→`enums` rename, removed `User.password`, required SMTP/DB credentials, in-memory
+    >   idempotency). All tasks green with 31 tests. See `docs/consumer-service.md` §11 and
+    >   `docs/ongoing-plan.md`.
 > - **Still pending**: docker-compose polish, admin bootstrap + final docs (Day 5)
+>
+> **Post–Day 4 hardening (code review + grilling):** Critical→Low findings addressed
+> (T1–T23), refresh token rotation added (T22), OSIV disabled, CORS per-profile,
+> Swagger gated to dev, rate limiting on auth endpoints, bean validation enforced.
+> Day 5 tasks: README, example.env, docker-compose update, architecture doc refresh.
+> Grilling session (2026-08-18) decisions: Docker Compose kept lean (user sets up own
+> infra), manual seed via Swagger/SQL, git history left as-is, @PreAuthorize bypass skipped.
 
 ---
 
@@ -84,6 +98,10 @@ the original "rotation" wording below, confirmed with the user.
 **Deliverable:** stateful logout + non-rotating refresh backed by Redis (refresh token stays
 valid until 1d expiry or logout; new refresh token issued only by re-login).
 
+> **Update:** Refresh token rotation + reuse detection was added later (T22, `bba9f76`).
+> `RefreshTokenService.rotate()` now deletes the consumed jti and stores the new one.
+> `RefreshTokenResponseDTO` gained a `refreshToken` field so the rotated token is returned.
+
 ## Day 3 — RabbitMQ export publisher (API side) ✅ DONE (verified)
 
 Code is complete, builds green, and the app boots. Verified end-to-end with demo seed data:
@@ -94,14 +112,14 @@ stopping RabbitMQ opens the circuit and the API returns **503** (see Manual veri
 |--------------|-----------------------------------------------------------------------------------------|
 | Dependency   | `spring-boot-starter-amqp` in `pom.xml`                                                 |
 | Topology     | `RabbitMQConfig`: direct exchange `progress.exchange`, queue `progress.report.export.q` 
-  (DLX args → `progress.exchange` / key `progress.report.export.dlq`), DLQ
-  `progress.report.export.dlq`, bindings, `JacksonJsonMessageConverter` (Jackson 3 —
-  `Jackson2JsonMessageConverter` is deprecated in Spring AMQP 4.0) + `RabbitTemplate`; explicit
-  `RabbitAdmin` bean (Boot 4 no longer auto-registers one) |
+(DLX args → `progress.exchange` / key `progress.report.export.dlq`), DLQ
+`progress.report.export.dlq`, bindings, `JacksonJsonMessageConverter` (Jackson 3 —
+`Jackson2JsonMessageConverter` is deprecated in Spring AMQP 4.0) + `RabbitTemplate`; explicit
+`RabbitAdmin` bean (Boot 4 no longer auto-registers one) |
 | Message + publisher | `ProgressReportMessage` (`classId`, `recipientEmail`, `requestedAt`, `requesterName`);
-  `ProgressReportPublisher.publish(...)` wrapped in `@CircuitBreaker(name = "rabbitmq-publish",
+`ProgressReportPublisher.publish(...)` wrapped in `@CircuitBreaker(name = "rabbitmq-publish",
   fallbackMethod = "publishFallback")`; fallback throws `ServiceUnavailableException` → 503
-  (deviation: the plan wording originally said `BusinessException`) |
+(deviation: the plan wording originally said `BusinessException`) |
 | Endpoint | `POST /api/class/{classId}/export` (ADMIN or teacher) → 202 "queued" + audit `action=export` on the class |
 | Resilience4j | `resilience4j.circuitbreaker` default config + `rabbitmq-publish` instance in `application.yaml` |
 | Infra | docker-compose: add `rabbitmq:3-management` (5672/15672) + env wiring |
@@ -132,22 +150,40 @@ The consumer was not only specified but **implemented and verified end-to-end**.
 
 **Notes / caveats:**
 - **SMTP auth:** Mailpit enforces `admin`/`admin` + plaintext (`MP_SMTP_AUTH_ALLOW_INSECURE`); the
-  consumer's `spring.mail.smtp.auth` must be `SMTP_AUTH=true` or mailing fails → DLQ.
+  consumer's `spring.mail.smtp.auth` must be `SMTP_AUTH=true` and `SMTP_USERNAME`/`SMTP_PASSWORD`
+  are **required env vars with no fallback** (hardening pass, `docs/consumer-service.md` §8c) — or
+  the app fails to start / mailing fails → DLQ.
+- **Consumer hardening:** the consumer was later hardened end-to-end (soft-delete, CSV injection,
+  email validation, breaker/DLQ, N+1 batching, observability, non-root Docker, idempotency).
+  See `docs/consumer-service.md` §11 and `docs/ongoing-plan.md`.
+- **Idempotency:** since the consumer runs at-least-once, an in-memory TTL guard
+  (`ReportIdempotencyGuard`, 5-min, keyed `classId|recipientEmail|requestedAt`) dedups redelivery
+  so a crash-after-send doesn't resend the email. Lossy across restarts — acceptable for the
+  current edge-case status.
 - **Broker ownership:** this compose stack defines its own RabbitMQ + Mailpit; the API repo's
   compose also declares RabbitMQ on the same ports, so both stacks can't be up at once (container
   names were suffixed `-lms` to reduce collision).
 - **Producer needs no change:** `ClassesService.exportProgress` already falls back to the current
   user's email; see the caveat added to "Caveats for future development".
 
-## Day 5 — Docs, admin bootstrap, polish
+## Day 5 — Docs, admin bootstrap, polish ✅ IN PROGRESS
 
-| Task | Details |
-| ---- | ------- |
-| Admin bootstrap | Manual SQL (documented): `UPDATE users SET role = 'ADMIN' WHERE email = '<email>';` |
-| Infra — Redis | docker-compose: add `redis` service (6379) — **note: `valkey` (Redis-compatible) already running in Docker on 6379**; pass `REDIS_HOST`/`REDIS_PORT` to the API service |
-| Architecture doc | Update `docs/architecture.md` (ER `audit_logs`, Redis/RabbitMQ/Mailpit/consumer diagrams, admin note) |
-| `.env` / `example.env` | Finalize all vars: `REDIS_*`, `JWT_*` (access/refresh secrets + `JWT_ACCESS_EXPIRATION`/`JWT_REFRESH_EXPIRATION`), `RABBITMQ_*`, `SMTP_*` |
-| Final verification | `mvn clean package -DskipTests`; end-to-end demo run; spotless formatting (`./mvnw spotless:apply`); confirm all DB changesets applied |
+Day 5 was refined via a grilling session (2026-08-18). Decisions:
+- **Docker Compose:** kept lean (API + RabbitMQ only); MySQL and Valkey commented out as optional; user sets up own infrastructure.
+- **Seed data:** manual via Swagger/SQL; `scripts/seed.sql` and `scripts/seed.ts` available but not auto-run.
+- **Git history:** left as-is (190 commits, honest development noise accepted).
+- **@PreAuthorize bypass test:** skipped — portfolio demo, not pen-test.
+- **LF renormalization:** skipped — no active development planned.
+
+| Task | Details | Status |
+| ---- | ------- | ------ |
+| README | `README.md` — project description, tech stack, features, dependencies/tech used, prerequisites, how to run (Maven + Docker Compose), API docs (WIP) | 🔄 In progress (not committed — user revising) |
+| `example.env` | All env vars with comments: `DB_*`, `JWT_*` (required), `RABBITMQ_*` / `REDIS_*` (optional) | 🔄 In progress |
+| Docker Compose | Update `docker-compose.yaml` — comment out MySQL/Valkey, add notes about consumer repo | 🔄 In progress |
+| Architecture doc | Update `docs/architecture.md` — deployment diagram, auth section (rotation, rate limiting), Valkey note, CORS/Swagger/OSIV updates | 🔄 In progress |
+| Admin bootstrap | Manual SQL (documented): `UPDATE users SET role = 'ADMIN' WHERE email = '<email>';` | ✅ documented in `docs/architecture.md` |
+| `.env` / `example.env` | Finalize all vars | 🔄 In progress (see above) |
+| Final verification | `mvn clean package -DskipTests`; spotless formatting; confirm all DB changesets applied | ⏸ After docs are done |
 
 **Deliverable:** polished, documented, demo-ready feature set.
 
@@ -157,7 +193,7 @@ The consumer was not only specified but **implemented and verified end-to-end**.
 
 1. `docker compose up -d rabbitmq redis mailpit` — MySQL + Valkey already run as Docker containers (`mysql`, `valkey` on 6379)
 2. Start API against local MySQL (`mvn spring-boot:run`) — Liquibase applies pending changesets on startup
-3. Demo data: `bun scripts/seed.ts` (docker-exec seed of 17 users / 6 classes / 30 enrollments / 26 materials / 16 assignments / 12 submissions / 30 progress rows; all users password `Passw0rd!`; credentials in `docs/demo-credentials.md`) — or manually register a user → promote to ADMIN via SQL
+3. Demo data: `bun scripts/seed.ts` (docker-exec seed of 8 users / 2 classes / 8 enrollments / 6 materials / 4 assignments / 12 submissions / 30 progress rows; all users password `Passw0rd!`; credentials in `docs/demo-credentials.md`) — or manually register a user → promote to ADMIN via SQL
 4. Login → capture tokens → refresh (new access token only; refresh token stays valid) → logout (refresh token revoked)
 5. Create class → material → assignment → enroll students → submit → grade
 6. Query `/api/audit-logs` (ADMIN) and check the filter queries
@@ -175,7 +211,7 @@ The consumer was not only specified but **implemented and verified end-to-end**.
 - **Changelog registration is easy to miss.** `create_audit_logs_table.sql` was added but never registered in `db.changelog-master.yaml` (fixed in `87f25fe`). Always append new scripts to the master changelog, or a fresh DB silently lacks the table.
 - **Login security.** Unknown email and wrong password both return 401 — deliberate anti-enumeration. Don't "fix" it back to a 404.
 - **JWT placeholders.** The `@Value` keys are `jwt.access.expiration` / `jwt.refresh.expiration` (dotted), matching `application.yaml`. The filter guard accepts **access** tokens only (`validateAccessToken`); refresh tokens (signed with `refreshSecret`) must not be used as bearer credentials.
-- **Export recipientEmail — no producer change required.** `ClassesService.exportProgress` (since `7d298ff`) already falls back to the **current user's email** when the request body's `recipientEmail` is null/blank. Verified end-to-end against the consumer: omit `recipientEmail` (or pass the Swagger `"string"` placeholder) and the consumer still delivers to `currentUser.getEmail()`. Optional hardening on the producer: add `@NotBlank @Email` to `ExportRequestDTO.recipientEmail` so a placeholder is rejected with 400 instead of reaching SMTP (currently a bad literal address like `"string"` flows all the way to the SMTP 553 → consumer DLQ).
+- **Export recipientEmail — no producer change required.** `ClassesService.exportProgress` (since `7d298ff`) already falls back to the **current user's email** when the request body's `recipientEmail` is null/blank. Verified end-to-end against the consumer: omit `recipientEmail` (or pass the Swagger `"string"` placeholder) and the consumer still delivers to `currentUser.getEmail()`. The consumer itself now **validates** the recipient as a single `InternetAddress` before sending (hardening pass, `MailService.parseSingleRecipient`) and rejects to the DLQ on blank/multi/invalid instead of hitting SMTP 553. Optional hardening on the producer (separate repo, not done): add `@NotBlank @Email` to `ExportRequestDTO.recipientEmail` so a placeholder is rejected with 400 upstream.
 
 ## LF line-ending enforcement (deferred)
 
@@ -203,3 +239,7 @@ bundle WIP into a style commit.
 
 - Tests (per project preference — keep the existing build green with `-DskipTests`)
 - Consumer implementation (built in a separate repository from `docs/consumer-service.md`)
+
+> **Update:** 5 integration tests were added post–Day 4 (JWT issuer, JWT active-user, audit
+> before/after, auth rate limiting, refresh rotation). Tests use Testcontainers (MySQL + Valkey
+> via `GenericContainer`). See `docs/ongoing.md` test policy for full table.

@@ -38,13 +38,17 @@ Everything else below is still open.
 | T22 | Refresh-token rotation / reuse | ✅ Done | `bba9f76` | `00e440f` |
 | T23 | Verify JWT issuer | ✅ Done | `d0566ea` | `927fd89` |
 | T-D1 | Validate `recipientEmail` | ⏸ Deferred | — | (pending) `test: cover export recipientEmail validation` |
-| T-D2 | Add redis service to compose | ⏸ Deferred | — | — |
-| T-D3 | Finalize `example.env` | ⏸ Deferred | — | — |
+| T-D2 | Add redis service to compose | 🚫 Skipped | — | — |
+| T-D3 | Finalize `example.env` | 🔄 In progress | — | — |
 | T-D4 | `server.port` (dup of T15) | 🔁 Dup | — | — |
 | T-D5 | Flatten bare `Pageable` params | ✅ Done | — | — |
-| T-D6 | Fix `architecture.md` staleness | ⏸ Deferred | — | — |
-| T-D7 | LF line-ending renormalization | ⏸ Deferred | — | — |
-| @PreAuthorize bypass | Assert auth rules per endpoint | ⬜ Open | — | (pending) `test: assert authorization rules per endpoint` |
+| T-D6 | Fix `architecture.md` staleness | 🔄 In progress | — | — |
+| T-D7 | LF line-ending renormalization | 🚫 Skipped | — | — |
+| @PreAuthorize bypass | Assert auth rules per endpoint | 🚫 Skipped | — | — |
+| README | Create project README | 🔄 In progress | — | — |
+| Docker Compose | Update compose (user sets up own infra) | 🔄 In progress | — | — |
+| README | Create project README | 🔄 In progress | — | — |
+| Docker Compose | Update compose (user sets up own infra) | 🔄 In progress | — | — |
 
 ---
 
@@ -59,28 +63,28 @@ Only the doc/infra notes are written now; the code/config/infra changes are defe
 - Commit (deferred): `fix(api): validate export recipientEmail` · test (deferred): `test: cover export recipientEmail validation`.
 
 ### T-D2 — Add redis/valkey service to API compose
-- **Decision:** use a `valkey` service on `6379` in `docker-compose.yaml`; pass `REDIS_HOST`/`REDIS_PORT`.
-- MySQL stays **external / separate** (current compose already expects `DB_HOST` env, no in-compose mysql).
-- Note: local dev already runs valkey/mysql/rabbitmq in Docker — stop the local valkey briefly to avoid the 6379 clash when bringing up the API compose.
-- Commit (deferred): `chore(docker): add redis service to API compose`.
+- **Decision (grilling Q7):** Keep `docker-compose.yaml` as API + RabbitMQ only. Comment out MySQL and Valkey services so users can uncomment them if needed. User sets up their own infrastructure. The consumer service (RabbitMQ + Mailpit + spring-lms-consumer) lives in a separate repository.
+- **Status: 🚫 SKIPPED** — compose kept lean per user preference; commented-out services added as optional.
 
 ### T-D3 — Finalize `example.env`
-- Add `REDIS_HOST`, `REDIS_PORT`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_ACCESS_EXPIRATION`, `JWT_REFRESH_EXPIRATION`.
-- Commit (deferred): `chore(env): add REDIS_*/JWT_* to example.env`.
+- **Status: 🔄 IN PROGRESS** — implementing now.
+- All env vars: `DB_*`, `JWT_*` (required, ≥32 chars), `RABBITMQ_*` (optional, for export), `REDIS_*` (optional, for refresh tokens).
+- Comments explaining each group, which are required vs optional.
+- Commit: `chore(env): finalize example.env with comments`.
 
 ### T-D5 — Flatten bare `Pageable` params
 - **Already done:** every controller (`Assignment`, `Material`, `Submission`, `Progress`, `Classes`, `AuditLog`) already uses `@ParameterObject`. No work.
 
 ### T-D6 — Fix `docs/architecture.md` staleness
+- **Status: 🔄 IN PROGRESS** — implementing now.
 - Fill empty "Audit Logs Actions" table (`create/update/delete/login/logout/refresh/export`).
 - ER diagram: `users.email` `text` → `varchar(255)`.
-- Deployment diagram: align Redis depiction with the T-D2 decision.
-- Commit (deferred): `docs(architecture): fix stale sections`.
+- Deployment diagram: note Valkey (not Redis) for local dev, external infra.
+- Add refresh token rotation, rate limiting, CORS per-profile, Swagger dev-only, OSIV disabled.
+- Commit: `docs(architecture): fix stale sections`.
 
 ### T-D7 — LF line-ending renormalization
-- `.gitattributes`: `* text=auto eol=lf` (keep `*.cmd text eol=crlf`); `git add --renormalize .`; verify `git diff -w --cached` empty.
-- Must run **last** so logic + doc/infra commits stay separate.
-- Commit (deferred): `style: enforce LF line endings via .gitattributes`.
+- **Status: 🚫 SKIPPED** — user chose to leave git history as-is (grilling Q10). Acceptable for a portfolio snapshot; no active development planned.
 
 ---
 
@@ -246,7 +250,7 @@ across boundaries.
 | T22 | `test: cover refresh reuse/revocation` |
 | T23 | `test: cover JWT issuer validation` |
 | T-D1 | `test: cover export recipientEmail validation` |
-| @PreAuthorize bypass | `test: assert authorization rules per endpoint` |
+| @PreAuthorize bypass | `test: assert authorization rules per endpoint` ← 🚫 SKIPPED |
 
 Tasks with no behavioral change (config/infra/docs/hygiene) need no test commit:
 T1, T2, T6, T7, T9–T15, T18–T20, T-D2…T-D7.
@@ -309,14 +313,15 @@ cross-checked against the current API repo state.
 - Commit: `docs(architecture): fix stale sections`
 
 ### T-D7 — LF line-ending renormalization (repo hygiene, do last)
-- `.gitattributes`: `* text=auto eol=lf` (keep `*.cmd text eol=crlf`)
-- `git add --renormalize .`; verify `git diff -w --cached` empty; commit `style: enforce LF line endings via .gitattributes`
-- Only after in-flight WIP is committed (per dev-plan's deferred note)
+- **Status: 🚫 SKIPPED** — user chose to leave git history as-is (grilling Q10).
 
 ## Notes / risks (doc-derived)
 
 - T-D1 is the only doc-recommended code change with a functional gap; the rest are infra/docs/hygiene.
-- T-D2 conflicts with the "valkey already external" reality — surface at implementation.
+- T-D2 skipped — compose kept lean; user sets up own infrastructure (grilling Q7).
 - T-D5 needs a verify-first pass to avoid touching already-correct files.
-- T-D7 must be last to avoid mixing style and logic changes.
+- T-D7 skipped — git history left as-is (grilling Q10).
+- @PreAuthorize bypass skipped — portfolio demo, not pen-test (grilling Q8d).
+- README created but NOT committed — user wants to revise before committing.
+- Grilling session (2026-08-18) decisions: Docker Compose split, manual seed, leave git history as-is.
 ```

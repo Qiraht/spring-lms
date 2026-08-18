@@ -1,3 +1,20 @@
+# =============================================================================
+# Spring LMS API — Docker Compose
+# =============================================================================
+# This compose file runs the API and RabbitMQ.
+# MySQL and Valkey are optional (commented out) — uncomment if you don't have
+# them running externally.
+#
+# The consumer service (spring-lms-consumer + RabbitMQ + Mailpit) lives in a
+# separate repository. Both compose stacks share the same host network so the
+# API can reach the consumer's RabbitMQ.
+#
+# Usage:
+#   1. Copy example.env to .env and fill in the values.
+#   2. docker compose up -d
+#   3. API: http://localhost:8080  |  Swagger: http://localhost:8080/swagger-ui.html
+# =============================================================================
+
 services:
   spring-lms-api:
     build:
@@ -12,17 +29,22 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=prod
       - PORT=${PORT:-8080}
-      ## Mysql
+      ## MySQL
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASSWORD=${DB_PASSWORD}
+      ## Redis / Valkey
+      - REDIS_HOST=${REDIS_HOST:-localhost}
+      - REDIS_PORT=${REDIS_PORT:-6379}
       ## RabbitMQ
-      - RABBITMQ_HOST=${RABBITMQ_HOST}
-      - RABBITMQ_PORT=${RABBITMQ_PORT}
-      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME}
-      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD}
+      - RABBITMQ_HOST=${RABBITMQ_HOST:-localhost}
+      - RABBITMQ_PORT=${RABBITMQ_PORT:-5672}
+      - RABBITMQ_USERNAME=${RABBITMQ_USERNAME:-guest}
+      - RABBITMQ_PASSWORD=${RABBITMQ_PASSWORD:-guest}
+    depends_on:
+      - rabbitmq
     restart: always
 
   rabbitmq:
@@ -35,3 +57,31 @@ services:
       - RABBITMQ_DEFAULT_USER=${RABBITMQ_USERNAME:-guest}
       - RABBITMQ_DEFAULT_PASS=${RABBITMQ_PASSWORD:-guest}
     restart: always
+
+  # ---------------------------------------------------------------------------
+  # Optional: uncomment the services below if you don't have MySQL and Valkey
+  # running externally. Make sure to update DB_HOST and REDIS_HOST in .env to
+  # match the container names (mysql / valkey).
+  # ---------------------------------------------------------------------------
+
+  # mysql:
+  #   image: mysql:8.0
+  #   container_name: mysql
+  #   ports:
+  #     - "3306:3306"
+  #   environment:
+  #     - MYSQL_ROOT_PASSWORD=${DB_PASSWORD:-changeme}
+  #     - MYSQL_DATABASE=${DB_NAME:-lmsdb}
+  #   volumes:
+  #     - mysql_data:/var/lib/mysql
+  #   restart: always
+
+  # valkey:
+  #   image: valkey/valkey:7.2
+  #   container_name: valkey
+  #   ports:
+  #     - "6379:6379"
+  #   restart: always
+
+# volumes:
+#   mysql_data:
