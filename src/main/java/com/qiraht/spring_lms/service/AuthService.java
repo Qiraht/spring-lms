@@ -34,6 +34,7 @@ public class AuthService {
 
         try {
             if (user == null) {
+                log.warn("Failed login attempt: no user found for email {}", request.getEmail());
                 throw new AuthenticationException("Email or Password Incorrect!");
             }
 
