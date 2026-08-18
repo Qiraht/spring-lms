@@ -29,7 +29,7 @@ public class AssignmentController {
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success(
-                        HttpStatus.OK.value(), "Assignment on class " + classId + " created successfully", data));
+                        HttpStatus.CREATED.value(), "Assignment on class " + classId + " created successfully", data));
     }
 
     @GetMapping("/{assignmentId}")
