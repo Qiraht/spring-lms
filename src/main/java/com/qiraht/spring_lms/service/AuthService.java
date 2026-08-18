@@ -84,12 +84,19 @@ public class AuthService {
         }
 
         String newAccessToken = jwtUtil.generateToken(user);
+        String newRefreshToken = jwtUtil.generateRefreshToken(user);
+        String newJti = jwtUtil.extractJti(newRefreshToken);
+
+        // Rotate: consume the presented jti and store the new one so a replayed
+        // (old) refresh token is rejected as revoked.
+        refreshTokenService.rotate(jti, newJti, userId);
 
         auditService.record(userId, "user", userId, "refresh", "success", null, null);
 
         log.info("User {} refreshed token", user.getEmail());
 
-        return new RefreshTokenResponseDTO(user.getEmail(), newAccessToken, accessTokenExpiration.toSeconds());
+        return new RefreshTokenResponseDTO(
+                user.getEmail(), newAccessToken, accessTokenExpiration.toSeconds(), newRefreshToken);
     }
 
     public void Logout(UUID userId) {

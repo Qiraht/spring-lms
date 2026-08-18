@@ -11,4 +11,5 @@ public class RefreshTokenResponseDTO {
     private String email;
     private String accessToken;
     private long expiresIn;
+    private String refreshToken;
 }

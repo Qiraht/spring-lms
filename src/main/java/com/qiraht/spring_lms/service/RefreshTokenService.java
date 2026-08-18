@@ -31,6 +31,12 @@ public class RefreshTokenService {
         return Boolean.TRUE.equals(redisTemplate.hasKey(REFRESH_KEY + jti));
     }
 
+    public void rotate(String oldJti, String newJti, UUID userId) {
+        redisTemplate.delete(REFRESH_KEY + oldJti);
+        redisTemplate.opsForSet().remove(USER_REFRESH_KEY + userId, oldJti);
+        save(newJti, userId);
+    }
+
     public void revokeAllForUser(UUID userId) {
         Set<String> jtis = redisTemplate.opsForSet().members(USER_REFRESH_KEY + userId);
         if (jtis != null) {
