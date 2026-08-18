@@ -71,7 +71,12 @@ public class JwtUtil {
     }
 
     private Claims parseSignedClaims(String token, SecretKey key) {
-        return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+        return Jwts.parser()
+                .verifyWith(key)
+                .requireIssuer("spring-lms-api")
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     public String generateToken(User user) {
