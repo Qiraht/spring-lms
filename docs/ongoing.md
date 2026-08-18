@@ -32,11 +32,11 @@ Everything else below is still open.
 | T15 | Fix `server.port` key | ✅ Done | `fb6ae60` | — |
 | T16 | JWT active-user check per request | ✅ Done | `56f5f04` | `5fae7d3` |
 | T17 | UNIQUE `users.email` | 🗑 Removed | — | — |
-| T18 | Created status in response body | ⬜ Open | — | — |
-| T19 | Correct filter exclusion list | ⬜ Open | — | — |
-| T20 | Failed-login audit (unknown email) | ⬜ Open | — | — |
-| T22 | Refresh-token rotation / reuse | ⬜ Open | — | (pending) `test: cover refresh reuse/revocation` |
-| T23 | Verify JWT issuer | ⬜ Open | — | (pending) `test: cover JWT issuer validation` |
+| T18 | Created status in response body | ✅ Done | `5bdfa3c` | — |
+| T19 | Correct filter exclusion list | ✅ Done | `e2d19a4` | — |
+| T20 | Failed-login audit (unknown email) | ✅ Done | `47450c6` | — |
+| T22 | Refresh-token rotation / reuse | ✅ Done | `bba9f76` | `00e440f` |
+| T23 | Verify JWT issuer | ✅ Done | `d0566ea` | `927fd89` |
 | T-D1 | Validate `recipientEmail` | ⏸ Deferred | — | (pending) `test: cover export recipientEmail validation` |
 | T-D2 | Add redis service to compose | ⏸ Deferred | — | — |
 | T-D3 | Finalize `example.env` | ⏸ Deferred | — | — |
@@ -203,8 +203,10 @@ Only the doc/infra notes are written now; the code/config/infra changes are defe
 
 ### T22 — Refresh-token rotation / reuse detection
 - `AuthService.RefreshToken` / `RefreshTokenService`: consume/rotate jti in Redis, reject reuse as revocation
+- `RefreshTokenService.rotate(oldJti, newJti, userId)` deletes the consumed jti and stores the new one; `RefreshTokenResponseDTO` gained a `refreshToken` field so the rotated token is returned.
 - Commit: `feat(security): rotate refresh tokens with reuse detection`
 - Test commit: `test: cover refresh reuse/revocation`
+- **Note (test):** `org.testcontainers:valkey` is **not a published artifact** (verified 404 on Maven Central); the test uses a `GenericContainer` with image `valkey/valkey:7.2` (redis-wire-compatible), wired via `@DynamicPropertySource`. Reuse is asserted through `refreshTokenService.isValid(jti)`, not `jwtUtil.validateRefreshToken` (the latter only checks signature/expiry).
 
 ### T23 — Verify JWT issuer
 - `JwtUtil`: add `requireIssuer("spring-lms-api")` on parse
