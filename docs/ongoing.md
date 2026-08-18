@@ -37,14 +37,50 @@ Everything else below is still open.
 | T20 | Failed-login audit (unknown email) | ⬜ Open | — | — |
 | T22 | Refresh-token rotation / reuse | ⬜ Open | — | (pending) `test: cover refresh reuse/revocation` |
 | T23 | Verify JWT issuer | ⬜ Open | — | (pending) `test: cover JWT issuer validation` |
-| T-D1 | Validate `recipientEmail` | ⬜ Open | — | (pending) `test: cover export recipientEmail validation` |
-| T-D2 | Add redis service to compose | ⬜ Open | — | — |
-| T-D3 | Finalize `example.env` | ⬜ Open | — | — |
+| T-D1 | Validate `recipientEmail` | ⏸ Deferred | — | (pending) `test: cover export recipientEmail validation` |
+| T-D2 | Add redis service to compose | ⏸ Deferred | — | — |
+| T-D3 | Finalize `example.env` | ⏸ Deferred | — | — |
 | T-D4 | `server.port` (dup of T15) | 🔁 Dup | — | — |
-| T-D5 | Flatten bare `Pageable` params | ⬜ Open | — | — |
-| T-D6 | Fix `architecture.md` staleness | ⬜ Open | — | — |
-| T-D7 | LF line-ending renormalization | ⬜ Open | — | — |
+| T-D5 | Flatten bare `Pageable` params | ✅ Done | — | — |
+| T-D6 | Fix `architecture.md` staleness | ⏸ Deferred | — | — |
+| T-D7 | LF line-ending renormalization | ⏸ Deferred | — | — |
 | @PreAuthorize bypass | Assert auth rules per endpoint | ⬜ Open | — | (pending) `test: assert authorization rules per endpoint` |
+
+---
+
+## Deferred — doc-derived (T-D) tasks, documented only this round
+
+The T-D tasks are **documented below but their implementation is excluded from this round**.
+Only the doc/infra notes are written now; the code/config/infra changes are deferred.
+
+### T-D1 — Validate `ExportRequestDTO.recipientEmail`
+- `dto/request/ExportRequestDTO.java`: `@NotBlank @Email` on `recipientEmail`.
+- `ClassesController.exportClassProgress`: `@Valid` on `@RequestBody(required = false) ExportRequestDTO`.
+- Commit (deferred): `fix(api): validate export recipientEmail` · test (deferred): `test: cover export recipientEmail validation`.
+
+### T-D2 — Add redis/valkey service to API compose
+- **Decision:** use a `valkey` service on `6379` in `docker-compose.yaml`; pass `REDIS_HOST`/`REDIS_PORT`.
+- MySQL stays **external / separate** (current compose already expects `DB_HOST` env, no in-compose mysql).
+- Note: local dev already runs valkey/mysql/rabbitmq in Docker — stop the local valkey briefly to avoid the 6379 clash when bringing up the API compose.
+- Commit (deferred): `chore(docker): add redis service to API compose`.
+
+### T-D3 — Finalize `example.env`
+- Add `REDIS_HOST`, `REDIS_PORT`, `JWT_ACCESS_SECRET`, `JWT_REFRESH_SECRET`, `JWT_ACCESS_EXPIRATION`, `JWT_REFRESH_EXPIRATION`.
+- Commit (deferred): `chore(env): add REDIS_*/JWT_* to example.env`.
+
+### T-D5 — Flatten bare `Pageable` params
+- **Already done:** every controller (`Assignment`, `Material`, `Submission`, `Progress`, `Classes`, `AuditLog`) already uses `@ParameterObject`. No work.
+
+### T-D6 — Fix `docs/architecture.md` staleness
+- Fill empty "Audit Logs Actions" table (`create/update/delete/login/logout/refresh/export`).
+- ER diagram: `users.email` `text` → `varchar(255)`.
+- Deployment diagram: align Redis depiction with the T-D2 decision.
+- Commit (deferred): `docs(architecture): fix stale sections`.
+
+### T-D7 — LF line-ending renormalization
+- `.gitattributes`: `* text=auto eol=lf` (keep `*.cmd text eol=crlf`); `git add --renormalize .`; verify `git diff -w --cached` empty.
+- Must run **last** so logic + doc/infra commits stay separate.
+- Commit (deferred): `style: enforce LF line endings via .gitattributes`.
 
 ---
 
