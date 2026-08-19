@@ -32,6 +32,7 @@ public class EnrollmentService {
                 UUID.fromString(classId), userId, ClassRole.TEACHER);
     }
 
+    @Transactional(readOnly = true)
     public boolean isTeacherOfMaterial(UUID userId, String materialId) {
         Material material = materialRepository
                 .findById(UUID.fromString(materialId))
@@ -39,6 +40,7 @@ public class EnrollmentService {
         return isTeacherOfClass(userId, material.getClasses().getId().toString());
     }
 
+    @Transactional(readOnly = true)
     public boolean isTeacherOfAssignment(UUID userId, String assignmentId) {
         Assignment assignment = assignmentRepository
                 .findById(UUID.fromString(assignmentId))
@@ -46,6 +48,7 @@ public class EnrollmentService {
         return isTeacherOfClass(userId, assignment.getClasses().getId().toString());
     }
 
+    @Transactional(readOnly = true)
     public boolean isEnrolledInMaterial(UUID userId, String materialId) {
         Material material = materialRepository
                 .findById(UUID.fromString(materialId))
@@ -53,6 +56,7 @@ public class EnrollmentService {
         return isEnrolledInClass(userId, material.getClasses().getId().toString());
     }
 
+    @Transactional(readOnly = true)
     public boolean isEnrolledInAssignment(UUID userId, String assignmentId) {
         Assignment assignment = assignmentRepository
                 .findById(UUID.fromString(assignmentId))

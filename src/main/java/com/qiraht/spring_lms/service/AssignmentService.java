@@ -21,6 +21,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -58,6 +59,7 @@ public class AssignmentService {
         return assignment.getId().toString();
     }
 
+    @Transactional(readOnly = true)
     public AssignmentResponseDTO getAssignmentById(String assignmentId) {
         Assignment assignment = assignmentRepository
                 .findById(UUID.fromString(assignmentId))
@@ -78,6 +80,7 @@ public class AssignmentService {
         return response;
     }
 
+    @Transactional(readOnly = true)
     public Page<AssignmentResponseDTO> getAssignmentsByClass(String classId, Pageable pageable) {
         // Check class
         classesRepository

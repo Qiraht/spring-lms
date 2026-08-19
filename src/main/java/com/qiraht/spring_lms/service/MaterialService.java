@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -53,6 +54,7 @@ public class MaterialService {
         return materialRepository.save(material).getId();
     }
 
+    @Transactional(readOnly = true)
     public MaterialResponseDTO getMaterialById(String materialId) {
         Material material = materialRepository
                 .findById(UUID.fromString(materialId))
@@ -73,6 +75,7 @@ public class MaterialService {
         return response;
     }
 
+    @Transactional(readOnly = true)
     public Page<MaterialResponseDTO> getAllMaterialsFromClass(String classId, Pageable pageable) {
         // Check class first
         classesRepository
