@@ -38,6 +38,7 @@ API (spring-lms)                         CONSUMER (spring-lms-consumer)
   - `spring-boot-starter-validation`
   - `org.projectlombok:lombok`
   - `spring-cloud-starter-circuitbreaker-resilience4j`
+  - `spring-boot-starter-actuator` (added in the hardening pass — §11)
   - `com.opencsv:opencsv` **optional** — otherwise write CSV with a plain `StringBuilder`
 
 ## 2. Data-access layer (copy from the API repo)
@@ -117,16 +118,16 @@ that foreign type-id:
 
 1. **Validate** message fields (non-blank `classId`, `recipientEmail`). Invalid → reject → DLQ.
 2. **Build aggregate** (one row per student, reuse the API's `ProgressService` math):
-   - class name, student full name
-   - total materials, completed materials
-   - total assignments, submitted assignments
-   - average score (`BigDecimal`, 2 decimals)
-   - completion % = `(completedMaterials + submittedAssignments) / (totalMaterials + totalAssignments) * 100`
+  - class name, student full name
+  - total materials, completed materials
+  - total assignments, submitted assignments
+  - average score (`BigDecimal`, 2 decimals)
+  - completion % = `(completedMaterials + submittedAssignments) / (totalMaterials + totalAssignments) * 100`
 3. **Build detail** (one row per material/assignment per student):
-   - type (`MATERIAL` / `ASSIGNMENT`), title, due date (assignments), status/completed, score
+  - type (`MATERIAL` / `ASSIGNMENT`), title, due date (assignments), status/completed, score
 4. **Generate CSV** (Strategy B — two attachments):
-   - `summary.csv` — header + aggregate rows
-   - `detail.csv` — header + detail rows
+  - `summary.csv` — header + aggregate rows
+  - `detail.csv` — header + detail rows
 5. **Email** via `MailService`: `MimeMessageHelper` with subject
    `"Progress Report — <className>"`, plain-text body, both CSVs as attachments.
 6. **Ack** on success: `channel.basicAck(deliveryTag, false)`.
@@ -177,7 +178,7 @@ spring:
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:lmsdb}?allowPublicKeyRetrieval=true&serverTimezone=UTC
     username: ${DB_USER:root}
-    password: ${DB_PASSWORD:supersecretpassword}
+    password: ${DB_PASSWORD}
   jpa:
     hibernate:
       ddl-auto: none
@@ -196,8 +197,8 @@ spring:
   mail:
     host: ${SMTP_HOST:localhost}
     port: ${SMTP_PORT:1025}
-    username: ${SMTP_USERNAME:}
-    password: ${SMTP_PASSWORD:}
+    username: ${SMTP_USERNAME}
+    password: ${SMTP_PASSWORD}
     properties:
       mail:
         smtp:
@@ -220,17 +221,23 @@ resilience4j:
 
 `example.env`
 ```
+# DB_HOST / DB_PORT / DB_NAME / DB_USER may keep localhost defaults in application.yaml;
+# DB_PASSWORD (and SMTP_USERNAME/SMTP_PASSWORD) are REQUIRED with NO default.
 DB_HOST=localhost
 DB_PORT=3306
 DB_NAME=lmsdb
 DB_USER=root
-DB_PASSWORD=supersecretpassword
+DB_PASSWORD=
 RABBITMQ_HOST=localhost
 RABBITMQ_PORT=5672
 RABBITMQ_USERNAME=guest
 RABBITMQ_PASSWORD=guest
 SMTP_HOST=localhost
 SMTP_PORT=1025
+SMTP_USERNAME=
+SMTP_PASSWORD=
+SMTP_AUTH=true
+SMTP_STARTTLS=false
 ```
 
 docker-compose service snippet — RabbitMQ and Mailpit are defined in this same Compose file;
@@ -291,8 +298,9 @@ Build decisions locked in before coding:
 - **Scope: whole repo** — Java app + `application.yaml` + `example.env` + `Dockerfile` +
   `docker-compose.yaml` (consumer + rabbitmq + mailpit).
 - **CSV outsourced to plain `StringBuilder`** (`opencsv` declared optional — skipped).
-**Build status:** ✅ Tasks 0–8 done; Task 9 (test) pending. Tasks 0–7 committed on `develop`,
-Task 8 (containerization) on `feature/container`.
+  **Build status:** ✅ Tasks 0–9 done. Tasks 0–7 on `develop`, Task 8 (containerization) on
+  `feature/container`, Task 9 (tests + final build) added later on `develop`. Followed by a
+  code-review hardening pass (see §11).
 
 | Task | Commit |
 |------|--------|
@@ -316,7 +324,7 @@ Task 8 (containerization) on `feature/container`.
   - added the Spotless (Palantir) plugin exactly as in the API repo's `pom.xml`
     (`com.diffplug.spotless:2.43.0`, palantir 2.39.0 PALANTIR, `removeUnusedImports`,
     UNIX line endings) — required by `docs/coding-rules.md`.
-  Verified: `./mvnw compile`, `./mvnw test-compile`, and `./mvnw spotless:check` all pass.
+    Verified: `./mvnw compile`, `./mvnw test-compile`, and `./mvnw spotless:check` all pass.
 
 | # | Task | Files | Verify |
 |---|------|-------|--------|
@@ -328,7 +336,7 @@ Task 8 (containerization) on `feature/container`.
 | 6 | ✅ **Mail service.** `MailService` per spec §5: `MimeMessageHelper` (UTF-8, multipart), subject `"Progress Report — <className>"`, plain-text body, both CSVs attached. Signature uses `List<CsvFile>` (deviation from spec's parallel lists, agreed). | `.../service/MailService.java` | ✅ Email lands in Mailpit (8025) with both attachments (`5be57eb`) |
 | 7 | ✅ **Listener + resilience.** `ProgressReportConsumer`: `@RabbitListener(queues="progress.report.export.q", ackMode="MANUAL")`; validate (blank `classId`/`recipientEmail` → reject → DLQ); `@CircuitBreaker(name="report-export", fallbackMethod="processFallback")`; success → `basicAck`; failure → log + `basicReject(deliveryTag, false)`. | `.../service/ProgressReportConsumer.java` | ✅ End-to-end verified: message consumed + email delivered (Mailpit) + bad-recipient/mail-down → DLQ (`18c1b8d`) |
 | 8 | ✅ **Configuration + infra.** `application.yaml` reconciled to spec §6 (datasource read-only `ddl-auto: none`, rabbit listener manual-ack + `default-requeue-rejected: false`, mail, `resilience4j` `report-export`); `example.env` (+ `SMTP_AUTH=true` note); `Dockerfile` (two-stage Maven→Temurin-21, no EXPOSE); single `docker-compose.yaml` (consumer + `rabbitmq-lms` + `mailpit-lms`). **Compose points:** consumer `DB_HOST=host.docker.internal` + `extra_hosts: host-gateway`; `.env`/`.env.*` gitignored. | `src/main/resources/application.yaml`, `example.env`, `Dockerfile`, `docker-compose.yaml`, `.gitignore` | ✅ `./mvnw clean package -DskipTests` green; `docker compose config` valid; `docker compose up` works (`20d62db`, feature/container) |
-| 9 | **Test + format + final build.** Update `SpringLmsConsumerApplicationTests` with `spring.rabbitmq.listener.simple.auto-startup=false` so `contextLoads` passes without infra; `./mvnw spotless:apply`; final `./mvnw clean package -DskipTests` green. | `src/test/.../SpringLmsConsumerApplicationTests.java` | Build green; `spotless:check` clean |
+| 9 | ✅ **Test + format + final build.** `@DataJpaTest` slice / `@SpringBootTest` / Mockito tests cover soft-delete filtering, CSV escaping, mailbox parsing, exporter/consumer breaker paths, N+1 query count, and idempotency. `contextLoads` runs with `spring.rabbitmq.listener.simple.auto-startup=false` (no broker); `application-test.yaml` uses H2 (`MODE=MySQL`, `ddl-auto: create-drop`) + `spring-boot-data-jpa-test`. `./mvnw spotless:apply`; final `./mvnw clean package -DskipTests` green. | `src/test/**`, `src/test/resources/application-test.yaml`, `pom.xml` | ✅ 31 tests / 0 failures; `spotless:check` clean; package green |
 
 **Manual end-to-end (after Task 9):**
 1. `docker compose up -d rabbitmq mailpit` + Dockerized API (or local) + `bun scripts/seed.ts`.
@@ -366,9 +374,11 @@ tests beyond `contextLoads`, `opencsv`, Excel (POI) output, retry exchange.
 - **Mailpit runs in the main `docker-compose.yaml`** (single stack: consumer + `rabbitmq-lms` +
   `mailpit-lms`), enforcing SMTP auth `admin`/`admin` with `MP_SMTP_AUTH_ALLOW_INSECURE=true`
   (plaintext, no TLS on localhost). Web UI (8025) is open by default. The consumer's
-  `spring.mail.smtp.auth` defaults to `false` — run with `SMTP_USERNAME=admin SMTP_PASSWORD=admin
-  SMTP_AUTH=true` (or set them in `.env`) or mail fails. The earlier standalone
-  `mailpit-docker-compose.yaml` was folded into the main compose.
+  `spring.mail.smtp.auth` defaults to `false` and `SMTP_USERNAME`/`SMTP_PASSWORD` are **required**
+  with no fallback (`application.yaml` has no `admin` defaults) — run with
+  `SMTP_USERNAME=admin SMTP_PASSWORD=admin SMTP_AUTH=true` (or set them in `.env`) or the app
+  fails to start / mail fails. The earlier standalone `mailpit-docker-compose.yaml` was folded
+  into the main compose.
 - **No `RabbitTemplate`.** The consumer only listens; the publish-side client is unused. Boot
   auto-provides one lazily if a future publish requirement appears.
 - **Lean repositories (deliberate).** Only aggregation-needed methods were copied (`f146520`);
@@ -393,12 +403,56 @@ tests beyond `contextLoads`, `opencsv`, Excel (POI) output, retry exchange.
 - **`application.yaml` is reconciled to spec §6** (datasource URL with
   `allowPublicKeyRetrieval`/`serverTimezone`, `ddl-auto: none`, manual ack +
   `default-requeue-rejected: false`, `mail`, `resilience4j` `report-export`) and committed with
-  Task 8 (`20d62db`). The user-set `admin`/`admin` SMTP defaults were kept (they match Mailpit).
+  Task 8 (`20d62db`). Later hardened (`d61d477`): `DB_PASSWORD`/`SMTP_USERNAME`/`SMTP_PASSWORD`
+  are now **required with no fallback** (Option B — no committed plaintext credentials).
 - **`mvn spring-boot:run` clean-exit — RESOLVED.** Without webmvc the app only stays alive when
   a non-daemon thread exists. With the Task 7 `@RabbitListener`, the listener container provides
   it, so `./mvnw spring-boot:run` now stays up. `@EnableRabbit` need not be added manually — Boot
   auto-registers it via `RabbitAnnotationDrivenConfiguration`.
 - **Git hygiene.** `docs/` is still **untracked** in this repo (including these very edits) —
-  per the decision, docs live with the main app. All consumer code (Tasks 0–8) is committed:
-  Tasks 0–7 on `develop`, Task 8 (containerization) on `feature/container`. Task 9 (test +
-  final `spotless:apply` build) is the only remaining item.
+  per the decision, docs live with the main app. All consumer code (Tasks 0–9) + the hardening
+  pass are committed (see §11).
+
+---
+
+## 11. Post-build hardening (code-review pass)
+
+After the original Tasks 0–9, the consumer was reviewed end-to-end (see
+`docs/ongoing-plan.md`) and hardened in eight tasks. All are **DONE** and verified.
+
+| # | Task | Summary | Commits |
+|---|------|---------|---------|
+| 1 | Consistent soft-delete filtering (High) | `Material`, `Assignment`, `AssignmentSubmission`, `StudentProgress` now carry `@SQLRestriction("deleted_at IS NULL")` (mirroring `Enrollment`); soft-deleted rows excluded from counts/lists automatically. H2 slice test asserts the predicate. | `2fb054d` `9583619` `ae0986f` |
+| 2 | CSV formula injection (Medium) | `CsvService.escape` prefixes leading `=` `+` `-` `@` with `'`; added `isEmpty` guard; made `escape` package-private (testable). 9 unit tests. | `74fa4e6` `336657e` |
+| 3 | Recipient email validation (Medium) | `MailService.parseSingleRecipient` (package-private static) rejects blank / multi-address / invalid before sending; `sendReport` uses the validated `InternetAddress`. 5 unit tests. | `64e2da4` `d1e6ca4` |
+| 4 | Circuit breaker + DLQ behavior (Medium) | Validation stays **outside** the breaker in `ProgressReportConsumer.process`; protected work moved to a new `ProgressReportExporter` bean (`@CircuitBreaker report-export`). Fallback checks state: OPEN/HALF_OPEN → `basicNack(requeue=true)`; CLOSED → `basicReject` (DLQ); `default-requeue-rejected: false`. Unit + trip-the-breaker `@SpringBootTest`. | `3e21f8d` `49fe6db` |
+| 5 | N+1 + duplicated class-level queries (High) | Batch queries (`JOIN FETCH e.user`, `findAllForClass` on progress + submissions) with in-memory indexing in `ProgressReportService.buildReport`; single pass (~5 queries vs O(S×(M+A))). H2 `@SpringBootTest` asserts math + query count ≤8. | `178e867` `952f3f1` |
+| 6 | Observability (Medium) | Added `spring-boot-starter-actuator`; `management.endpoints.web.exposure.include: health,info,metrics`; `config/DlqDepthMetrics` exposes a `rabbitmq.queue.messages` gauge (tag `queue=progress.report.export.dlq`) reading `AmqpAdmin.getQueueInfo(DLQ).getMessageCount()` lazily. | `23a7c1e` `26dfe6b` |
+| 7 | Small fixes (Low) | `ProgressReportService.studentName` null-safe; dropped redundant `RabbitAdmin` bean (Boot auto-config) + widened `setTrustedPackages`; Docker runtime runs as non-root `app` user. | `9feb313` |
+| 8a | Package rename `Enum`→`enums` | Java package-convention fix (`enum` is a reserved word). `git mv` + import updates; spotless import reorder follow-up. | `629f162` `c24954b` |
+| 8b | Remove `User.password` | Read-only consumer never uses it; field removed from the JPA entity (DB column kept — the shared API still writes it). | `c9d9012` |
+| 8c | Hardcoded secrets | `DB_PASSWORD`/`SMTP_USERNAME`/`SMTP_PASSWORD` now required (no fallback); `example.env` blanks them (Option B); `application-test.yaml` provides test creds. | `d61d477` |
+| 8d | Idempotency (duplicate emails) | `ReportIdempotencyGuard` in-memory TTL cache keyed by `classId\|recipientEmail\|requestedAt`, 5-min TTL (`report.idempotency.ttl-ms`); consumer acks + skips duplicates before export. Lossy across restarts (acceptable per review). | `2b31488` |
+| 9 | Tests + format | SoftDelete, CSV, mailbox, exporter, consumer, N+1, idempotency + `contextLoads` — 31 tests, 0 failures; `spotless:check` + package green. | Task 9 + above |
+
+### Load-bearing caveats
+
+- **DLQ gauge injects `AmqpAdmin`, NOT `RabbitAdmin`.** After Task 7 removed the manual
+  `RabbitAdmin` bean, Boot's auto-configured admin is exposed with declared return type
+  `AmqpAdmin` — injecting the concrete `RabbitAdmin` breaks context load (`26dfe6b`).
+- **Multi-path OR queries need explicit `LEFT JOIN`s on nullable associations.** Task 5's first
+  `findAllForClass` synthesized INNER joins and dropped rows where only one side was set; fixed
+  with explicit `LEFT JOIN`s. Bear this in mind for future OR queries.
+- **Breakered work lives on `ProgressReportExporter`** (proxy AOP) — `@CircuitBreaker` is
+  proxy-based, so a self-invoked method bypasses the aspect. Keep the protected work in the
+  separate `exportReportAndSend`.
+- **Fallback runs on ANY failure, not only OPEN** — the state check in `exportFallback`
+  (QUEUE vs reject) is what honors "requeue only while unavailable".
+- **Idempotency is in-memory only** — a crash after send but before `basicAck` within the TTL is
+  the only case deduped; across restarts the cache is empty (acceptable, per the review).
+
+### Verification
+
+- `./mvnw spotless:apply` ✅
+- `./mvnw test` ✅ — 31 tests, 0 failures
+- `./mvnw package -DskipTests` ✅
