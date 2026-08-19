@@ -3,6 +3,7 @@ package com.qiraht.spring_lms.controller;
 import com.qiraht.spring_lms.dto.ApiResponse;
 import com.qiraht.spring_lms.dto.response.StudentClassSummaryDTO;
 import com.qiraht.spring_lms.service.ProgressService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/class/{classId}")
 @RequiredArgsConstructor
+@Tag(name = "Student Progress")
 public class ProgressController {
 
     private final ProgressService progressService;

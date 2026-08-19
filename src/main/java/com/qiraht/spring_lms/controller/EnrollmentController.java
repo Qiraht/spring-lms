@@ -19,11 +19,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/class/{classId}/enroll")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Enrollments")
 public class EnrollmentController {
 
     private final EnrollmentService enrollmentService;
 
-    @Tag(name = "Enrollment")
     @Operation(
             summary = "Enroll User",
             description = "Enroll User to Class. Authentication Needed and role 'Admin' needed")
@@ -38,7 +38,6 @@ public class EnrollmentController {
                 .body(ApiResponse.success(HttpStatus.CREATED.value(), "Users enrolled successfully", null));
     }
 
-    @Tag(name = "Enrollment")
     @Operation(
             summary = "Delete User Enrollment",
             description = "Delete User Enrollment. Authentication Needed and role 'Admin' needed")

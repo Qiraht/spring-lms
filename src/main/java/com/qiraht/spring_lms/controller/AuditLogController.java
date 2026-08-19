@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/audit-logs")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Audit Log")
 public class AuditLogController {
     private final AuditService auditService;
 

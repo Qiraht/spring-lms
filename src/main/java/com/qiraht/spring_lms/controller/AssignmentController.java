@@ -4,6 +4,7 @@ import com.qiraht.spring_lms.dto.ApiResponse;
 import com.qiraht.spring_lms.dto.request.AssignmentRequestDTO;
 import com.qiraht.spring_lms.dto.response.AssignmentResponseDTO;
 import com.qiraht.spring_lms.service.AssignmentService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.data.domain.Page;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/assignment")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Assignments")
 public class AssignmentController {
     private final AssignmentService assignmentService;
 

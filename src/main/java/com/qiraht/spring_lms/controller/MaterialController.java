@@ -5,6 +5,7 @@ import com.qiraht.spring_lms.dto.request.MaterialRequestDTO;
 import com.qiraht.spring_lms.dto.response.MaterialResponseDTO;
 import com.qiraht.spring_lms.service.MaterialService;
 import com.qiraht.spring_lms.service.ProgressService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/material")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Materials")
 public class MaterialController {
     private final MaterialService materialService;
     private final ProgressService progressService;

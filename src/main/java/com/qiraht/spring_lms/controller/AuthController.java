@@ -25,10 +25,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Auth")
 public class AuthController {
     private final AuthService authService;
 
-    @Tag(name = "Auth")
     @Operation(
             summary = "Post Auth User",
             description = "Authenticate user and return JWT access + refresh token. Public API")
@@ -54,7 +54,6 @@ public class AuthController {
                         .build());
     }
 
-    @Tag(name = "Auth")
     @Operation(
             summary = "Refresh Token",
             description = "Exchange a valid refresh token for a new access token. Public API")
@@ -80,7 +79,6 @@ public class AuthController {
                         .build());
     }
 
-    @Tag(name = "Auth")
     @Operation(
             summary = "Logout",
             description = "Revoke all refresh tokens for the authenticated user. Authentication needed")

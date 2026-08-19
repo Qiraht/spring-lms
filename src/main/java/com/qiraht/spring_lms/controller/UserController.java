@@ -19,10 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/user")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Users")
 public class UserController {
     private final UserService userService;
 
-    @Tag(name = "User")
     @Operation(summary = "Post Register User", description = "Register new User with default role 'USER'. Public API")
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<UUID>> postRegister(@RequestBody RegisterRequestDTO request) {

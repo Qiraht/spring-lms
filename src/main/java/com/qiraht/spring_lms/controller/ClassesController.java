@@ -22,10 +22,10 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/class")
 @RequiredArgsConstructor
 @Validated
+@Tag(name = "Class")
 public class ClassesController {
     private final ClassesService classesService;
 
-    @Tag(name = "Class")
     @Operation(
             summary = "Create Class",
             description = "Create new Class. Authentication Needed and role 'Admin' needed ")
@@ -38,7 +38,6 @@ public class ClassesController {
                 .body(ApiResponse.success(HttpStatus.CREATED.value(), "Class created successfully", id));
     }
 
-    @Tag(name = "Class")
     @Operation(summary = "Get All Classes", description = "Return All Classes. Authentication Needed")
     @GetMapping
     @PreAuthorize("hasAnyRole('ADMIN','USER')") // Any Authenticated
@@ -48,7 +47,6 @@ public class ClassesController {
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(HttpStatus.OK.value(), "success", data));
     }
 
-    @Tag(name = "class")
     @Operation(summary = "Get Class By Id", description = "Return a class by id. Authentication Needed")
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','USER')")
@@ -58,7 +56,6 @@ public class ClassesController {
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(HttpStatus.OK.value(), "success", data));
     }
 
-    @Tag(name = "Class")
     @Operation(
             summary = "Put Class",
             description =
@@ -72,7 +69,6 @@ public class ClassesController {
         return ResponseEntity.status(HttpStatus.OK).body(ApiResponse.success(HttpStatus.OK.value(), "success", null));
     }
 
-    @Tag(name = "Class")
     @Operation(
             summary = "Delete Class",
             description = "Delete Class (Soft Delete). Authentication Needed and role 'ADMIN' needed")
@@ -84,7 +80,6 @@ public class ClassesController {
         return ResponseEntity.ok(ApiResponse.success(200, "success", null));
     }
 
-    @Tag(name = "Class")
     @Operation(
             summary = "Export Class Progress",
             description =

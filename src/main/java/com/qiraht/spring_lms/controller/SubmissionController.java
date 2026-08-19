@@ -5,6 +5,7 @@ import com.qiraht.spring_lms.dto.request.GradeRequestDTO;
 import com.qiraht.spring_lms.dto.request.SubmissionRequestDTO;
 import com.qiraht.spring_lms.dto.response.SubmissionResponseDTO;
 import com.qiraht.spring_lms.service.SubmissionService;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/assignment/{assignmentId}/submission")
 @RequiredArgsConstructor
+@Tag(name = "Assignment Submission")
 public class SubmissionController {
 
     private final SubmissionService submissionService;
