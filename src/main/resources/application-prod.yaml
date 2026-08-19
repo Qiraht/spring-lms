@@ -2,11 +2,6 @@ spring:
   config:
     activate:
       on-profile: prod
-server:
-  port: ${PORT:8080}
-  application:
-    name: spring-lms
-
   datasource:
     url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME}
     username: ${DB_USER}
@@ -26,3 +21,8 @@ server:
       enabled: false
     swagger-ui:
       enabled: false
+
+server:
+  port: ${PORT:8080}
+  application:
+    name: spring-lms
