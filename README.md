@@ -184,7 +184,7 @@ entity relationship diagram, and deployment topology.
 
 ## Related Repositories
 
-- **spring-lms-consumer** — RabbitMQ consumer that builds CSV progress reports and emails
+- [**spring-lms-consumer**](https://github.com/Qiraht/spring-lms-consumer) — RabbitMQ consumer that builds CSV progress reports and emails
   them. Runs with its own Docker Compose stack (consumer + RabbitMQ + Mailpit).
 
 ## License
